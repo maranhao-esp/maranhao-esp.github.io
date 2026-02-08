@@ -1,5 +1,5 @@
 {
-  "name": "Nosso App Oficial ❤️",
+  "name": "Nosso App ❤️",
   "short_name": "NossoApp",
   "start_url": "index.html",
   "display": "standalone",
@@ -9,7 +9,8 @@
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2589/2589175.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

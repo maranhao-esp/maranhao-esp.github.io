@@ -1,161 +1,230 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nosso Espaço ❤️</title>
 
 <style>
-body{font-family:sans-serif;background:#111;color:white;padding:10px}
-.box{background:#1e1e1e;padding:10px;border-radius:12px;margin-bottom:15px}
-.msg{background:#2a2a2a;padding:8px;margin:5px;border-radius:10px}
-.eu{background:#0066ff}
-.small{font-size:11px;opacity:0.7}
+body{
+font-family:Arial;
+background:#ffd6e7;
+margin:0;
+padding:20px;
+}
+.container{max-width:700px;margin:auto;}
+.card{
+background:white;
+padding:15px;
+border-radius:15px;
+margin-bottom:15px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+button{
+background:#ff4f87;
+border:none;
+color:white;
+padding:6px 10px;
+border-radius:8px;
+cursor:pointer;
+}
+input{padding:8px;border-radius:8px;border:1px solid #ccc;width:60%;}
+.msg{background:#ffeaf2;padding:8px;border-radius:8px;margin:5px 0;}
+small{color:#555;}
+.reply{font-size:12px;background:#fff0f6;padding:4px;border-left:3px solid #ff4f87;margin-bottom:4px;}
 </style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Nosso Espaço ❤️</h1>
+<p id="contador"></p>
+
+<div class="card">
+<button id="loginBtn">Entrar com Google</button>
+<p id="userInfo">Não logado</p>
+</div>
+
+<div class="card">
+<h3>💬 Chat <span id="digitando"></span></h3>
+<div id="chatBox"></div>
+<div id="replyPreview"></div>
+<input id="chatInput">
+<button onclick="enviarChat()">Enviar</button>
+</div>
+
+<div class="card">
+<h3>💭 Pensamentos</h3>
+<div id="pensamentosBox"></div>
+<input id="pensamentoInput">
+<button onclick="enviarPensamento()">Enviar</button>
+</div>
+
+<div class="card">
+<h3>📋 Lista Livre</h3>
+<div id="listaBox"></div>
+<input id="listaInput">
+<button onclick="enviarLista()">Adicionar</button>
+</div>
+
+</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore,collection,addDoc,deleteDoc,updateDoc,doc,onSnapshot,query,orderBy,setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
-  authDomain: "manuu-c23a7.firebaseapp.com",
-  databaseURL: "https://manuu-c23a7-default-rtdb.firebaseio.com",
-  projectId: "manuu-c23a7",
-  storageBucket: "manuu-c23a7.firebasestorage.app",
-  messagingSenderId: "378235951611",
-  appId: "1:378235951611:web:72c855fbb5ccdb1a84535e",
-  measurementId: "G-2V1EXW1794"
+const firebaseConfig={
+apiKey:"COLOCA_AQUI",
+authDomain:"COLOCA_AQUI",
+projectId:"COLOCA_AQUI",
+storageBucket:"COLOCA_AQUI",
+messagingSenderId:"COLOCA_AQUI",
+appId:"COLOCA_AQUI"
 };
-const app=initializeApp(firebaseConfig);
-const db=getDatabase(app);
-const auth=getAuth();
 
-const emailsPermitidos=[
+const app=initializeApp(firebaseConfig);
+const auth=getAuth();
+const db=getFirestore();
+
+const contasPermitidas=[
 "lorenzemanuelly@gmail.com",
 "caua60198@gmail.com"
 ];
 
 let usuario=null;
-let foto=null;
-let respondendo=null;
+let replyMsg=null;
 
-window.loginGoogle=async()=>{
-const provider=new GoogleAuthProvider();
-const result=await signInWithPopup(auth,provider);
-if(!emailsPermitidos.includes(result.user.email)){
-alert("Sem acesso");
-auth.signOut();
-}
-};
+loginBtn.onclick=()=>signInWithPopup(auth,new GoogleAuthProvider());
 
 onAuthStateChanged(auth,(user)=>{
 if(user){
-usuario=user.displayName;
-foto=user.photoURL;
-document.getElementById("status").innerText="Logado: "+usuario;
-set(ref(db,"online/"+usuario),true);
+if(!contasPermitidas.includes(user.email)){
+alert("Conta não permitida");
+auth.signOut();
+return;
+}
+usuario=user;
+userInfo.innerText="Logado: "+user.displayName;
 }
 });
 
-window.digitando=()=>{
-set(ref(db,"digitando/"+usuario),true);
-setTimeout(()=>set(ref(db,"digitando/"+usuario),false),2000);
-};
+function hora(){
+return new Date().toLocaleTimeString();
+}
 
-window.enviarChat=()=>{
-const texto=document.getElementById("msg").value;
-push(ref(db,"chat"),{
-autor:usuario,
-foto:foto,
-texto:texto,
-hora:new Date().toLocaleTimeString(),
-resp:respondendo
+chatInput.oninput=()=>{
+if(usuario){
+setDoc(doc(db,"digitando","status"),{
+nome:usuario.displayName,
+texto:chatInput.value.length>0?"digitando...":""
 });
-respondendo=null;
-document.getElementById("msg").value="";
+}
 };
 
-onChildAdded(ref(db,"chat"),(data)=>{
-const d=data.val();
-const eu=d.autor==usuario?"msg eu":"msg";
-document.getElementById("chat").innerHTML+=`
-<div class="${eu}" onclick="responder('${d.texto}')">
-<img src="${d.foto}" width="25">
-<b>${d.autor}</b><br>
-${d.resp?`<div class='small'>↪ ${d.resp}</div>`:""}
-${d.texto}
-<div class="small">${d.hora}</div>
+onSnapshot(doc(db,"digitando","status"),snap=>{
+if(snap.exists()){
+digitando.innerText=snap.data().nome+" "+snap.data().texto;
+}
+});
+
+async function enviarChat(){
+if(!usuario)return;
+await addDoc(collection(db,"chat"),{
+nome:usuario.displayName,
+texto:chatInput.value,
+hora:hora(),
+reply:replyMsg
+});
+chatInput.value="";
+replyMsg=null;
+replyPreview.innerHTML="";
+}
+
+async function enviarPensamento(){
+if(!usuario)return;
+await addDoc(collection(db,"pensamentos"),{
+nome:usuario.displayName,
+texto:pensamentoInput.value,
+hora:hora()
+});
+pensamentoInput.value="";
+}
+
+async function enviarLista(){
+if(!usuario)return;
+await addDoc(collection(db,"lista"),{
+nome:usuario.displayName,
+texto:listaInput.value,
+hora:hora()
+});
+listaInput.value="";
+}
+
+function responder(texto){
+replyMsg=texto;
+replyPreview.innerHTML="<div class='reply'>Respondendo: "+texto+"</div>";
+}
+
+async function apagar(id){
+await deleteDoc(doc(db,"chat",id));
+}
+
+async function editar(id,texto){
+let novo=prompt("Editar mensagem:",texto);
+if(novo){
+await updateDoc(doc(db,"chat",id),{texto:novo});
+}
+}
+
+onSnapshot(query(collection(db,"chat"),orderBy("hora")),snap=>{
+chatBox.innerHTML="";
+snap.forEach(d=>{
+let m=d.data();
+chatBox.innerHTML+=`
+<div class="msg">
+${m.reply?`<div class="reply">${m.reply}</div>`:""}
+${m.nome}: ${m.texto}
+<br><small>${m.hora}</small>
+<br>
+<button onclick="responder('${m.texto}')">Responder</button>
+<button onclick="editar('${d.id}','${m.texto}')">Editar</button>
+<button onclick="apagar('${d.id}')">Apagar</button>
 </div>`;
 });
-
-window.responder=(txt)=>{
-respondendo=txt;
-document.getElementById("msg").placeholder="Respondendo...";
-};
-
-window.enviarPensamento=()=>{
-const t=document.getElementById("pensamento").value;
-push(ref(db,"pensamentos"),{
-autor:usuario,
-texto:t,
-hora:new Date().toLocaleTimeString()
-});
-document.getElementById("pensamento").value="";
-};
-
-onChildAdded(ref(db,"pensamentos"),(d)=>{
-const v=d.val();
-document.getElementById("pensamentos").innerHTML+=
-`<div class="msg">${v.autor}: ${v.texto}<div class="small">${v.hora}</div></div>`;
 });
 
-window.enviarLista=()=>{
-const t=document.getElementById("lista").value;
-push(ref(db,"listaLivre"),{
-autor:usuario,
-texto:t,
-hora:new Date().toLocaleTimeString()
+onSnapshot(collection(db,"pensamentos"),snap=>{
+pensamentosBox.innerHTML="";
+snap.forEach(d=>{
+let m=d.data();
+pensamentosBox.innerHTML+=`<div class="msg">${m.nome}: ${m.texto}</div>`;
 });
-document.getElementById("lista").value="";
-};
+});
 
-onChildAdded(ref(db,"listaLivre"),(d)=>{
-const v=d.val();
-document.getElementById("listas").innerHTML+=
-`<div class="msg">• ${v.texto} - ${v.autor}<div class="small">${v.hora}</div></div>`;
+onSnapshot(collection(db,"lista"),snap=>{
+listaBox.innerHTML="";
+snap.forEach(d=>{
+let m=d.data();
+listaBox.innerHTML+=`<div class="msg">• ${m.texto} - ${m.nome}</div>`;
 });
+});
+
+window.enviarChat=enviarChat;
+window.enviarPensamento=enviarPensamento;
+window.enviarLista=enviarLista;
+window.apagar=apagar;
+window.editar=editar;
+window.responder=responder;
+
+const inicio=new Date("2024-01-01");
+setInterval(()=>{
+let dias=Math.floor((new Date()-inicio)/86400000);
+contador.innerText="❤️ "+dias+" dias juntos";
+},1000);
 
 </script>
-</head>
-
-<body>
-
-<h2>Nosso Espaço ❤️</h2>
-<button onclick="loginGoogle()">Entrar com Google</button>
-<p id="status"></p>
-
-<div class="box">
-<h3>💬 Chat</h3>
-<div id="chat"></div>
-<input id="msg" oninput="digitando()">
-<button onclick="enviarChat()">Enviar</button>
-</div>
-
-<div class="box">
-<h3>💭 Pensamentos</h3>
-<div id="pensamentos"></div>
-<input id="pensamento">
-<button onclick="enviarPensamento()">Enviar</button>
-</div>
-
-<div class="box">
-<h3>📋 Lista Livre</h3>
-<div id="listas"></div>
-<input id="lista">
-<button onclick="enviarLista()">Adicionar</button>
-</div>
-
 </body>
 </html>

@@ -4,34 +4,201 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nosso Espaço ❤️</title>
+<link rel="manifest" href="manifest.json">
 
 <style>
-body{
-font-family:Arial;
-background:#ffd6e7;
-margin:0;
-padding:20px;
-}
-.container{max-width:700px;margin:auto;}
-.card{
-background:white;
-padding:15px;
-border-radius:15px;
-margin-bottom:15px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
-}
-button{
-background:#ff4f87;
-border:none;
-color:white;
-padding:6px 10px;
-border-radius:8px;
-cursor:pointer;
-}
-input{padding:8px;border-radius:8px;border:1px solid #ccc;width:60%;}
-.msg{background:#ffeaf2;padding:8px;border-radius:8px;margin:5px 0;}
-small{color:#555;}
-.reply{font-size:12px;background:#fff0f6;padding:4px;border-left:3px solid #ff4f87;margin-bottom:4px;}
+    /* VARIÁVEIS DE CORES */
+    :root {
+        --primary: #ff4f87;
+        --secondary: #ff75a0;
+        --bg: #ffd6e7;
+        --card-bg: #ffffff;
+        --text: #4a4a4a;
+        --msg-out: #ffeaf2;
+        --msg-in: #fff0f6;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg);
+        margin: 0;
+        padding: 10px;
+        color: var(--text);
+        padding-bottom: 50px;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: auto;
+    }
+
+    /* CABEÇALHO */
+    h1 {
+        color: var(--primary);
+        text-align: center;
+        font-size: 1.8rem;
+        margin-top: 20px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+    }
+
+    #contador {
+        text-align: center;
+        font-weight: bold;
+        color: var(--primary);
+        background: white;
+        padding: 10px;
+        border-radius: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+
+    /* CARDS */
+    .card {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 20px rgba(255, 79, 135, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    h3 {
+        color: var(--primary);
+        margin-top: 0;
+        font-size: 1.1rem;
+        border-bottom: 2px solid var(--msg-out);
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+    }
+
+    /* INPUTS E BOTÕES */
+    .input-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    input {
+        flex: 1;
+        padding: 12px 18px;
+        border-radius: 15px;
+        border: 2px solid #f0f0f0;
+        outline: none;
+        transition: 0.3s;
+        font-size: 0.95rem;
+    }
+
+    input:focus {
+        border-color: var(--primary);
+    }
+
+    button {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border: none;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 15px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 12px rgba(255, 79, 135, 0.3);
+    }
+
+    button:active {
+        transform: scale(0.95);
+    }
+
+    /* LOGIN */
+    #loginBtn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    #userInfo {
+        text-align: center;
+        font-size: 0.85rem;
+        margin: 0;
+        color: #888;
+    }
+
+    /* CHAT BOX */
+    #chatBox {
+        height: 300px;
+        overflow-y: auto;
+        padding-right: 5px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .msg {
+        background: var(--msg-out);
+        padding: 12px 15px;
+        border-radius: 20px 20px 20px 5px;
+        position: relative;
+        max-width: 85%;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg small {
+        display: block;
+        font-size: 0.65rem;
+        color: #aaa;
+        margin-top: 5px;
+        text-align: right;
+    }
+
+    .msg b {
+        color: var(--primary);
+        font-size: 0.75rem;
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    /* BOTÕES DENTRO DA MENSAGEM */
+    .msg-actions {
+        display: flex;
+        gap: 5px;
+        margin-top: 8px;
+    }
+
+    .msg-actions button {
+        padding: 3px 8px;
+        font-size: 0.7rem;
+        background: white;
+        color: var(--primary);
+        border: 1px solid var(--msg-out);
+        box-shadow: none;
+    }
+
+    /* REPLY E STATUS */
+    .reply {
+        font-size: 0.8rem;
+        background: rgba(255, 255, 255, 0.5);
+        padding: 6px 10px;
+        border-left: 4px solid var(--primary);
+        border-radius: 5px;
+        margin-bottom: 6px;
+        color: #777;
+    }
+
+    #replyPreview { margin-bottom: 5px; }
+
+    #digitando {
+        font-size: 0.8rem;
+        font-style: italic;
+        color: var(--primary);
+        margin-left: 10px;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 </style>
 </head>
 
@@ -39,50 +206,56 @@ small{color:#555;}
 <div class="container">
 
 <h1>Nosso Espaço ❤️</h1>
-<p id="contador"></p>
+<p id="contador">Calculando dias...</p>
 
 <div class="card">
-<button id="loginBtn">Entrar com Google</button>
-<p id="userInfo">Não logado</p>
+    <button id="loginBtn">Entrar com Google</button>
+    <p id="userInfo">Não logado</p>
 </div>
 
 <div class="card">
-<h3>💬 Chat <span id="digitando"></span></h3>
-<div id="chatBox"></div>
-<div id="replyPreview"></div>
-<input id="chatInput">
-<button onclick="enviarChat()">Enviar</button>
+    <h3>💬 Chat <span id="digitando"></span></h3>
+    <div id="chatBox"></div>
+    <div id="replyPreview"></div>
+    <div class="input-group">
+        <input id="chatInput" placeholder="Digite uma mensagem...">
+        <button onclick="enviarChat()">✈️</button>
+    </div>
 </div>
 
 <div class="card">
-<h3>💭 Pensamentos</h3>
-<div id="pensamentosBox"></div>
-<input id="pensamentoInput">
-<button onclick="enviarPensamento()">Enviar</button>
+    <h3>💭 Pensamentos</h3>
+    <div id="pensamentosBox"></div>
+    <div class="input-group">
+        <input id="pensamentoInput" placeholder="No que está pensando?">
+        <button onclick="enviarPensamento()">Postar</button>
+    </div>
 </div>
 
 <div class="card">
-<h3>📋 Lista Livre</h3>
-<div id="listaBox"></div>
-<input id="listaInput">
-<button onclick="enviarLista()">Adicionar</button>
+    <h3>📋 Lista Livre</h3>
+    <div id="listaBox"></div>
+    <div class="input-group">
+        <input id="listaInput" placeholder="Adicionar item...">
+        <button onclick="enviarLista()">Add</button>
+    </div>
 </div>
 
 </div>
 
 <script type="module">
-
+// --- MANTENDO O SEU CÓDIGO FIREBASE ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore,collection,addDoc,deleteDoc,updateDoc,doc,onSnapshot,query,orderBy,setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
-apiKey:"COLOCA_AQUI",
-authDomain:"COLOCA_AQUI",
-projectId:"COLOCA_AQUI",
-storageBucket:"COLOCA_AQUI",
-messagingSenderId:"COLOCA_AQUI",
-appId:"COLOCA_AQUI"
+    apiKey:"COLOCA_AQUI",
+    authDomain:"COLOCA_AQUI",
+    projectId:"COLOCA_AQUI",
+    storageBucket:"COLOCA_AQUI",
+    messagingSenderId:"COLOCA_AQUI",
+    appId:"COLOCA_AQUI"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -90,8 +263,8 @@ const auth=getAuth();
 const db=getFirestore();
 
 const contasPermitidas=[
-"lorenzemanuelly@gmail.com",
-"caua60198@gmail.com"
+    "lorenzemanuelly@gmail.com",
+    "caua60198@gmail.com"
 ];
 
 let usuario=null;
@@ -100,116 +273,122 @@ let replyMsg=null;
 loginBtn.onclick=()=>signInWithPopup(auth,new GoogleAuthProvider());
 
 onAuthStateChanged(auth,(user)=>{
-if(user){
-if(!contasPermitidas.includes(user.email)){
-alert("Conta não permitida");
-auth.signOut();
-return;
-}
-usuario=user;
-userInfo.innerText="Logado: "+user.displayName;
-}
+    if(user){
+        if(!contasPermitidas.includes(user.email)){
+            alert("Conta não permitida");
+            auth.signOut();
+            return;
+        }
+        usuario=user;
+        userInfo.innerText="Logado como: "+user.displayName;
+        loginBtn.style.display = "none";
+    }
 });
 
 function hora(){
-return new Date().toLocaleTimeString();
+    return new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 }
 
 chatInput.oninput=()=>{
-if(usuario){
-setDoc(doc(db,"digitando","status"),{
-nome:usuario.displayName,
-texto:chatInput.value.length>0?"digitando...":""
-});
-}
+    if(usuario){
+        setDoc(doc(db,"digitando","status"),{
+            nome:usuario.displayName.split(" ")[0], // Pega apenas o primeiro nome
+            texto:chatInput.value.length>0?"digitando...":""
+        });
+    }
 };
 
 onSnapshot(doc(db,"digitando","status"),snap=>{
-if(snap.exists()){
-digitando.innerText=snap.data().nome+" "+snap.data().texto;
-}
+    if(snap.exists() && snap.data().texto !== ""){
+        digitando.innerText = " - " + snap.data().nome + " está digitando...";
+    } else {
+        digitando.innerText = "";
+    }
 });
 
 async function enviarChat(){
-if(!usuario)return;
-await addDoc(collection(db,"chat"),{
-nome:usuario.displayName,
-texto:chatInput.value,
-hora:hora(),
-reply:replyMsg
-});
-chatInput.value="";
-replyMsg=null;
-replyPreview.innerHTML="";
+    if(!usuario || chatInput.value.trim() === "") return;
+    await addDoc(collection(db,"chat"),{
+        nome:usuario.displayName,
+        texto:chatInput.value,
+        hora:hora(),
+        timestamp: Date.now(),
+        reply:replyMsg
+    });
+    chatInput.value="";
+    replyMsg=null;
+    replyPreview.innerHTML="";
 }
 
 async function enviarPensamento(){
-if(!usuario)return;
-await addDoc(collection(db,"pensamentos"),{
-nome:usuario.displayName,
-texto:pensamentoInput.value,
-hora:hora()
-});
-pensamentoInput.value="";
+    if(!usuario || pensamentoInput.value.trim() === "") return;
+    await addDoc(collection(db,"pensamentos"),{
+        nome:usuario.displayName,
+        texto:pensamentoInput.value,
+        hora:hora()
+    });
+    pensamentoInput.value="";
 }
 
 async function enviarLista(){
-if(!usuario)return;
-await addDoc(collection(db,"lista"),{
-nome:usuario.displayName,
-texto:listaInput.value,
-hora:hora()
-});
-listaInput.value="";
+    if(!usuario || listaInput.value.trim() === "") return;
+    await addDoc(collection(db,"lista"),{
+        nome:usuario.displayName,
+        texto:listaInput.value,
+        hora:hora()
+    });
+    listaInput.value="";
 }
 
 function responder(texto){
-replyMsg=texto;
-replyPreview.innerHTML="<div class='reply'>Respondendo: "+texto+"</div>";
+    replyMsg=texto;
+    replyPreview.innerHTML="<div class='reply'>Respondendo: "+texto+"</div>";
+    chatInput.focus();
 }
 
 async function apagar(id){
-await deleteDoc(doc(db,"chat",id));
+    if(confirm("Deseja apagar esta mensagem?")) await deleteDoc(doc(db,"chat",id));
 }
 
 async function editar(id,texto){
-let novo=prompt("Editar mensagem:",texto);
-if(novo){
-await updateDoc(doc(db,"chat",id),{texto:novo});
-}
+    let novo=prompt("Editar mensagem:",texto);
+    if(novo){ await updateDoc(doc(db,"chat",id),{texto:novo}); }
 }
 
-onSnapshot(query(collection(db,"chat"),orderBy("hora")),snap=>{
-chatBox.innerHTML="";
-snap.forEach(d=>{
-let m=d.data();
-chatBox.innerHTML+=`
-<div class="msg">
-${m.reply?`<div class="reply">${m.reply}</div>`:""}
-${m.nome}: ${m.texto}
-<br><small>${m.hora}</small>
-<br>
-<button onclick="responder('${m.texto}')">Responder</button>
-<button onclick="editar('${d.id}','${m.texto}')">Editar</button>
-<button onclick="apagar('${d.id}')">Apagar</button>
-</div>`;
-});
+onSnapshot(query(collection(db,"chat"),orderBy("timestamp")),snap=>{
+    chatBox.innerHTML="";
+    snap.forEach(d=>{
+        let m=d.data();
+        chatBox.innerHTML+=`
+        <div class="msg">
+            <b>${m.nome}</b>
+            ${m.reply?`<div class="reply">${m.reply}</div>`:""}
+            ${m.texto}
+            <small>${m.hora}</small>
+            <div class="msg-actions">
+                <button onclick="responder('${m.texto}')">↩️</button>
+                <button onclick="editar('${d.id}','${m.texto}')">✏️</button>
+                <button onclick="apagar('${d.id}')">🗑️</button>
+            </div>
+        </div>`;
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
 });
 
 onSnapshot(collection(db,"pensamentos"),snap=>{
-pensamentosBox.innerHTML="";
-snap.forEach(d=>{
-let m=d.data();
-pensamentosBox.innerHTML+=`<div class="msg">${m.nome}: ${m.texto}</div>`;
-});
+    pensamentosBox.innerHTML="";
+    snap.forEach(d=>{
+        let m=d.data();
+        pensamentosBox.innerHTML+=`<div class="msg" style="max-width:100%"><b>${m.nome}</b>${m.texto}</div>`;
+    });
 });
 
 onSnapshot(collection(db,"lista"),snap=>{
-listaBox.innerHTML="";
-snap.forEach(d=>{
-let m=d.data();
-listaBox.innerHTML+=`<div class="msg">• ${m.texto} - ${m.nome}</div>`;
-});
+    listaBox.innerHTML="";
+    snap.forEach(d=>{
+        let m=d.data();
+        listaBox.innerHTML+=`<div class="msg" style="max-width:100%; background:white; border:1px solid #f0f0f0">• ${m.texto}</div>`;
+    });
 });
 
 window.enviarChat=enviarChat;
@@ -219,10 +398,11 @@ window.apagar=apagar;
 window.editar=editar;
 window.responder=responder;
 
-const inicio=new Date("2024-01-01");
+const inicio=new Date("2025-01-26");
 setInterval(()=>{
-let dias=Math.floor((new Date()-inicio)/86400000);
-contador.innerText="❤️ "+dias+" dias juntos";
+    let diff = new Date() - inicio;
+    let dias=Math.floor(diff/86400000);
+    contador.innerText="❤️ "+dias+" dias juntos";
 },1000);
 
 </script>

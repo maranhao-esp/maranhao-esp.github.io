@@ -1,7 +1,7 @@
 {
   "name": "Nosso App ❤️",
   "short_name": "NossoApp",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffeef2",
   "theme_color": "#ff6b6b",

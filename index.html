@@ -84,6 +84,8 @@
             <button id="btn-google" style="width:100%; padding:15px; border-radius:15px; background:white; border:1px solid #ddd; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com Google
             </button>
+            <button id="btn-notificacao" onclick="ativarNotificacoes()">🔔 ATIVAR NOTIFICAÇÕES</button>
+<div id="status" style="font-size: 12px; color: #888;"></div>
             <div id="nickname-box" style="display:none; margin-top:20px;">
                 <input id="nickInput" placeholder="Teu apelido..." style="border: 1px solid #eee; width: 85%; margin-bottom:10px; border-radius:10px; padding: 12px;">
                 <button onclick="salvarNick()" style="background: var(--p); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold;">Entrar</button>
@@ -289,5 +291,41 @@
     function cancelarRep() { rMsg = null; document.getElementById('reply-box').style.display = "none"; }
     function apagar(c) { if(confirm("Apagar?")) db.ref(c).remove(); }
 </script>
+    <script>
+    // Se o firebaseConfig já estiver no seu código, não precisa repetir, 
+    // mas garanta que essas linhas abaixo existam:
+    const db = firebase.database();
+    const messaging = firebase.messaging();
+
+    async function ativarNotificacoes() {
+        const statusDiv = document.getElementById('status');
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const token = await messaging.getToken({ 
+                    vapidKey: 'BPn6ATIl_Rjnxsn8yiRCQBZ2XtisDs5qIW6hiq391z6YTYEtKyY9OQfVAgs2y6v3siAamzjyRDjTMrDSzbm9uY0' 
+                });
+                if (token) {
+                    // Salva o token no seu banco de dados
+                    await db.ref('tokens_pwa').child('usuario_principal').set(token);
+                    statusDiv.innerText = "✅ Notificações Ativas!";
+                    alert("Sucesso! Agora o app está conectado.");
+                }
+            } else {
+                alert("Você precisa permitir as notificações no navegador.");
+            }
+        } catch (error) {
+            console.error(error);
+            statusDiv.innerText = "Erro ao ativar.";
+        }
+    }
+
+    // REGISTRO DO SERVICE WORKER (MUITO IMPORTANTE)
+    if ('serviceWorker' in navigator) {
+        // Use o nome do arquivo que você criou no passo anterior
+        navigator.serviceWorker.register('firebase-messaging-sw.js');
+    }
+                                                     </script>
+    
 </body>
 </html>

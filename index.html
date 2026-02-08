@@ -4,119 +4,158 @@
 <meta charset="UTF-8">
 <title>Nosso Espaço ❤️</title>
 
+<style>
+body{font-family:sans-serif;background:#111;color:white;padding:10px}
+.box{background:#1e1e1e;padding:10px;border-radius:12px;margin-bottom:15px}
+.msg{background:#2a2a2a;padding:8px;margin:5px;border-radius:10px}
+.eu{background:#0066ff}
+.small{font-size:11px;opacity:0.7}
+</style>
+
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, push, onChildAdded, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
-  authDomain: "manuu-c23a7.firebaseapp.com",
-  databaseURL: "https://manuu-c23a7-default-rtdb.firebaseio.com",
-  projectId: "manuu-c23a7",
-  storageBucket: "manuu-c23a7.firebasestorage.app",
-  messagingSenderId: "378235951611",
-  appId: "1:378235951611:web:72c855fbb5ccdb1a84535e",
-  measurementId: "G-2V1EXW1794"
+const firebaseConfig={
+apiKey:"COLOQUE_AQUI",
+authDomain:"COLOQUE_AQUI",
+databaseURL:"COLOQUE_AQUI",
+projectId:"COLOQUE_AQUI",
+storageBucket:"COLOQUE_AQUI",
+messagingSenderId:"COLOQUE_AQUI",
+appId:"COLOQUE_AQUI"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth();
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
+const auth=getAuth();
 
-const emailsPermitidos = [
+const emailsPermitidos=[
 "lorenzemanuelly@gmail.com",
 "caua60198@gmail.com"
 ];
 
 let usuario=null;
+let foto=null;
+let respondendo=null;
 
-window.loginGoogle = async ()=>{
- const provider=new GoogleAuthProvider();
- const result=await signInWithPopup(auth,provider);
- if(!emailsPermitidos.includes(result.user.email)){
-   alert("Sem acesso");
-   auth.signOut();
- }
+window.loginGoogle=async()=>{
+const provider=new GoogleAuthProvider();
+const result=await signInWithPopup(auth,provider);
+if(!emailsPermitidos.includes(result.user.email)){
+alert("Sem acesso");
+auth.signOut();
+}
 };
 
 onAuthStateChanged(auth,(user)=>{
- if(user){
-   usuario=user.displayName;
-   document.getElementById("status").innerText="Logado: "+usuario;
- }
+if(user){
+usuario=user.displayName;
+foto=user.photoURL;
+document.getElementById("status").innerText="Logado: "+usuario;
+set(ref(db,"online/"+usuario),true);
+}
 });
 
+window.digitando=()=>{
+set(ref(db,"digitando/"+usuario),true);
+setTimeout(()=>set(ref(db,"digitando/"+usuario),false),2000);
+};
+
 window.enviarChat=()=>{
- const msg=document.getElementById("msg").value;
- push(ref(db,"chat"),{
-  autor:usuario,
-  texto:msg,
-  hora:new Date().toLocaleTimeString()
- });
- document.getElementById("msg").value="";
+const texto=document.getElementById("msg").value;
+push(ref(db,"chat"),{
+autor:usuario,
+foto:foto,
+texto:texto,
+hora:new Date().toLocaleTimeString(),
+resp:respondendo
+});
+respondendo=null;
+document.getElementById("msg").value="";
 };
 
 onChildAdded(ref(db,"chat"),(data)=>{
- const d=data.val();
- document.getElementById("chat").innerHTML+=
- `<div><b>${d.autor}</b> (${d.hora}): ${d.texto}</div>`;
+const d=data.val();
+const eu=d.autor==usuario?"msg eu":"msg";
+document.getElementById("chat").innerHTML+=`
+<div class="${eu}" onclick="responder('${d.texto}')">
+<img src="${d.foto}" width="25">
+<b>${d.autor}</b><br>
+${d.resp?`<div class='small'>↪ ${d.resp}</div>`:""}
+${d.texto}
+<div class="small">${d.hora}</div>
+</div>`;
 });
 
-window.enviarPensamento=()=>{
- const msg=document.getElementById("pensamento").value;
- push(ref(db,"pensamentos"),{
-  autor:usuario,
-  texto:msg,
-  hora:new Date().toLocaleTimeString()
- });
- document.getElementById("pensamento").value="";
+window.responder=(txt)=>{
+respondendo=txt;
+document.getElementById("msg").placeholder="Respondendo...";
 };
 
-onChildAdded(ref(db,"pensamentos"),(data)=>{
- const d=data.val();
- document.getElementById("pensamentos").innerHTML+=
- `<div>${d.autor} (${d.hora}): ${d.texto}</div>`;
+window.enviarPensamento=()=>{
+const t=document.getElementById("pensamento").value;
+push(ref(db,"pensamentos"),{
+autor:usuario,
+texto:t,
+hora:new Date().toLocaleTimeString()
+});
+document.getElementById("pensamento").value="";
+};
+
+onChildAdded(ref(db,"pensamentos"),(d)=>{
+const v=d.val();
+document.getElementById("pensamentos").innerHTML+=
+`<div class="msg">${v.autor}: ${v.texto}<div class="small">${v.hora}</div></div>`;
 });
 
 window.enviarLista=()=>{
- const msg=document.getElementById("lista").value;
- push(ref(db,"listaLivre"),{
-  autor:usuario,
-  texto:msg,
-  hora:new Date().toLocaleTimeString()
- });
- document.getElementById("lista").value="";
+const t=document.getElementById("lista").value;
+push(ref(db,"listaLivre"),{
+autor:usuario,
+texto:t,
+hora:new Date().toLocaleTimeString()
+});
+document.getElementById("lista").value="";
 };
 
-onChildAdded(ref(db,"listaLivre"),(data)=>{
- const d=data.val();
- document.getElementById("listas").innerHTML+=
- `<div>• ${d.texto} - ${d.autor} (${d.hora})</div>`;
+onChildAdded(ref(db,"listaLivre"),(d)=>{
+const v=d.val();
+document.getElementById("listas").innerHTML+=
+`<div class="msg">• ${v.texto} - ${v.autor}<div class="small">${v.hora}</div></div>`;
 });
-</script>
 
+</script>
 </head>
+
 <body>
 
 <h2>Nosso Espaço ❤️</h2>
 <button onclick="loginGoogle()">Entrar com Google</button>
 <p id="status"></p>
 
+<div class="box">
 <h3>💬 Chat</h3>
 <div id="chat"></div>
-<input id="msg">
+<input id="msg" oninput="digitando()">
 <button onclick="enviarChat()">Enviar</button>
+</div>
 
+<div class="box">
 <h3>💭 Pensamentos</h3>
 <div id="pensamentos"></div>
 <input id="pensamento">
 <button onclick="enviarPensamento()">Enviar</button>
+</div>
 
+<div class="box">
 <h3>📋 Lista Livre</h3>
 <div id="listas"></div>
 <input id="lista">
 <button onclick="enviarLista()">Adicionar</button>
+</div>
 
 </body>
 </html>

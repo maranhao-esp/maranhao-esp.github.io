@@ -2,109 +2,141 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Nosso Mundo ❤️</title>
     <link rel="manifest" href="manifest.json">
+    
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
     <style>
-        :root { --p: #ff4f87; --bg: #fff5f8; --c: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 70px; overflow-x: hidden; }
+        :root { --p: #ff4f87; --bg: #fff5f8; }
         
-        /* LOGIN SCREEN */
-        #login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; }
-        .login-card { background: white; padding: 30px; border-radius: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 85%; max-width: 350px; }
-        
-        /* HEADER */
-        header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 900; }
-        #status-online { font-size: 0.7rem; color: #2ecc71; font-weight: bold; margin-top: 5px; }
+        /* Configuração para o ecrã não rolar loucamente com o teclado */
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: var(--bg);
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-        /* TAB SYSTEM */
-        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s ease; }
-        .active-tab { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Estrutura Principal */
+        #app-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100dvh; /* Altura dinâmica */
+        }
 
-        /* TAB BAR (MOBILE STYLE) */
-        .tab-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; height: 60px; }
-        .tab-item { border: none; background: none; color: #bbb; font-weight: bold; font-size: 0.8rem; flex: 1; cursor: pointer; transition: 0.3s; }
-        .tab-item.active { color: var(--p); transform: translateY(-3px); }
+        #login-screen { 
+            position: fixed; inset: 0; background: var(--bg); z-index: 10000; 
+            display: flex; align-items: center; justify-content: center; 
+        }
+        .login-card { background: white; padding: 30px; border-radius: 30px; text-shadow: none; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 85%; max-width: 350px; }
 
-        /* MESSAGES */
-        #chatBox { height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 5px; }
-        .msg { max-width: 80%; padding: 12px; border-radius: 20px; font-size: 0.9rem; position: relative; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        header { background: white; padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); flex-shrink: 0; }
+        #status-online { font-size: 0.7rem; color: #2ecc71; font-weight: bold; }
+
+        /* Sistema de Abas */
+        .tab-content { display: none; flex: 1; flex-direction: column; overflow: hidden; padding: 10px; }
+        .active-tab { display: flex; }
+
+        /* Área do Chat */
+        #chatBox { 
+            flex: 1; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            padding: 5px;
+            scroll-behavior: smooth;
+        }
+
+        .msg { max-width: 80%; padding: 12px; border-radius: 20px; font-size: 0.9rem; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .msg.sent { align-self: flex-end; background: var(--p); color: white; border-bottom-right-radius: 2px; }
         .msg.received { align-self: flex-start; background: white; border: 1px solid #f0f0f0; border-bottom-left-radius: 2px; }
         .msg-name { font-size: 0.65rem; font-weight: bold; margin-bottom: 3px; display: block; opacity: 0.8; }
 
-        /* INPUTS */
-        .input-area { display: flex; gap: 8px; background: white; padding: 10px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        input { flex: 1; border: none; padding: 10px; outline: none; background: transparent; font-size: 0.95rem; }
-        button.btn-circle { background: var(--p); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+        /* Barra de Escrita (Sempre visível) */
+        .input-container { padding: 10px; background: white; border-top: 1px solid #eee; flex-shrink: 0; }
+        .input-area { display: flex; gap: 8px; background: #f9f9f9; padding: 5px 10px; border-radius: 30px; align-items: center; }
+        input { flex: 1; border: none; padding: 10px; outline: none; background: transparent; font-size: 1rem; }
+        
+        .btn-circle { background: var(--p); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-        /* LISTS */
-        .card { background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.02); border: 1px solid #fff0f6; }
-        .list-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #fdf0f5; padding-bottom: 8px; margin-bottom: 10px; color: var(--p); }
-        .item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #fafafa; font-size: 0.9rem; }
-        .btn-check { color: #2ecc71; cursor: pointer; font-size: 1.1rem; }
+        /* Menu Inferior */
+        .tab-bar { background: white; display: flex; justify-content: space-around; padding: 5px 0; border-top: 1px solid #eee; height: 60px; flex-shrink: 0; }
+        .tab-item { border: none; background: none; color: #bbb; font-weight: bold; font-size: 0.75rem; flex: 1; cursor: pointer; }
+        .tab-item.active { color: var(--p); }
+
+        /* Estilo das Listas */
+        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #fafafa; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-card">
-            <h2 style="color: var(--p); margin: 0;">Nosso Espaço ❤️</h2>
-            <p style="color: #888; font-size: 0.9rem;">Faz login para entrar</p>
+            <h2 style="color: var(--p)">Nosso Espaço ❤️</h2>
             <button id="btn-google" style="width:100%; padding:15px; border-radius:15px; background:white; border:1px solid #ddd; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com Google
             </button>
             <div id="nickname-box" style="display:none; margin-top:20px;">
-                <input id="nickInput" placeholder="Teu apelido..." style="border: 1px solid #eee; width: 85%; margin-bottom:10px; background: #f9f9f9; border-radius:10px; padding: 12px;">
-                <button onclick="salvarNick()" style="background: var(--p); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold;">Começar</button>
+                <input id="nickInput" placeholder="Teu apelido..." style="border: 1px solid #eee; width: 85%; margin-bottom:10px; border-radius:10px; padding: 12px;">
+                <button onclick="salvarNick()" style="background: var(--p); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold;">Entrar</button>
             </div>
         </div>
     </div>
 
-    <header>
-        <div id="contador" style="font-weight:bold; color: var(--p); font-size: 1.1rem;"></div>
-        <div id="status-online">● Online <span id="digitando-aviso" style="color:#ff85a2; font-style:italic; font-weight:normal"></span></div>
-    </header>
+    <div id="app-wrapper">
+        <header>
+            <div id="contador" style="font-weight:bold; color: var(--p);"></div>
+            <div id="status-online">● Online <span id="digitando-aviso" style="font-weight:normal; color:#aaa"></span></div>
+        </header>
 
-    <div id="tab-chat" class="tab-content active-tab">
-        <div id="chatBox"></div>
-        <div id="reply-box" style="display:none; background:#eee; padding:8px; border-radius:10px; margin-bottom:5px; font-size:0.8rem; border-left:4px solid var(--p)">
-            <span id="reply-text"></span> <span onclick="cancelarRep()" style="float:right; cursor:pointer">✕</span>
-        </div>
-        <div class="input-area">
-            <input id="chatInput" placeholder="Escreve aqui..." oninput="digitando()">
-            <button class="btn-circle" onclick="enviarChat()">✈</button>
-        </div>
-    </div>
-
-    <div id="tab-mural" class="tab-content">
-        <div id="muralBox"></div>
-        <div class="input-area">
-            <input id="muralInput" placeholder="O que estás a pensar?">
-            <button class="btn-circle" onclick="enviarMural()">✨</button>
-        </div>
-    </div>
-
-    <div id="tab-listas" class="tab-content">
-        <div class="card" style="margin-bottom:20px;">
-            <h4 style="margin:0 0 10px 0; color:var(--p)">Criar Nova Lista</h4>
-            <div class="input-area">
-                <input id="novaListaInput" placeholder="Ex: Filmes, Viagens...">
-                <button class="btn-circle" onclick="criarLista()">+</button>
+        <div id="tab-chat" class="tab-content active-tab">
+            <div id="chatBox"></div>
+            <div id="reply-box" style="display:none; background:#eee; padding:5px; border-radius:10px; font-size:0.8rem; border-left:4px solid var(--p)">
+                <span id="reply-text"></span> <span onclick="cancelarRep()" style="float:right">✕</span>
+            </div>
+            <div class="input-container">
+                <div class="input-area">
+                    <input id="chatInput" placeholder="Mensagem..." oninput="emitirDigitando()">
+                    <button class="btn-circle" onclick="enviarChat()">✈</button>
+                </div>
             </div>
         </div>
-        <div id="area-listas"></div>
-    </div>
 
-    <nav class="tab-bar">
-        <button class="tab-item active" onclick="mudarTab('chat', this)">💬<br>Chat</button>
-        <button class="tab-item" onclick="mudarTab('mural', this)">💭<br>Mural</button>
-        <button class="tab-item" onclick="mudarTab('listas', this)">📋<br>Listas</button>
-    </nav>
+        <div id="tab-mural" class="tab-content">
+            <div id="muralBox" style="flex:1; overflow-y:auto"></div>
+            <div class="input-container">
+                <div class="input-area">
+                    <input id="muralInput" placeholder="Pensamento...">
+                    <button class="btn-circle" onclick="enviarMural()">✨</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-listas" class="tab-content" style="overflow-y:auto">
+            <div class="card">
+                <h4 style="margin:0 0 10px 0; color:var(--p)">Criar Nova Lista</h4>
+                <div class="input-area">
+                    <input id="novaListaInput" placeholder="Ex: Filmes...">
+                    <button class="btn-circle" onclick="criarLista()">+</button>
+                </div>
+            </div>
+            <div id="area-listas"></div>
+        </div>
+
+        <nav class="tab-bar">
+            <button class="tab-item active" onclick="mudarTab('chat', this)">💬<br>Chat</button>
+            <button class="tab-item" onclick="mudarTab('mural', this)">💭<br>Mural</button>
+            <button class="tab-item" onclick="mudarTab('listas', this)">📋<br>Listas</button>
+        </nav>
+    </div>
 
     <audio id="ping" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
 
@@ -123,14 +155,11 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let user = null;
-    let myNick = localStorage.getItem('v2_nick');
-    let rMsg = null;
+    let user = null, myNick = localStorage.getItem('v3_nick'), rMsg = null;
 
-    // LOGIN GOOGLE CORRIGIDO
+    // LOGIN
     document.getElementById('btn-google').onclick = () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).catch(e => alert("Erro ao logar: " + e.message));
+        auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
     };
 
     auth.onAuthStateChanged(u => {
@@ -139,28 +168,33 @@
             if(!myNick) {
                 document.getElementById('btn-google').style.display = "none";
                 document.getElementById('nickname-box').style.display = "block";
-            } else {
-                iniciar();
-            }
+            } else { iniciar(); }
         }
     });
 
     function salvarNick() {
         const n = document.getElementById('nickInput').value.trim();
-        if(n) { myNick = n; localStorage.setItem('v2_nick', n); iniciar(); }
+        if(n) { myNick = n; localStorage.setItem('v3_nick', n); iniciar(); }
     }
 
     function iniciar() {
         document.getElementById('login-screen').style.display = "none";
         
         // Contador
-        const d1 = new Date("2025-01-26");
+        const d1 = new Date("26-02-2025");
         setInterval(() => {
             const dias = Math.floor((new Date() - d1) / 86400000);
             document.getElementById('contador').innerText = `❤️ ${dias} dias juntos`;
         }, 1000);
 
-        carregarTudo();
+        carregarDados();
+        
+        // AJUSTE DE TECLADO: Sempre rolar para baixo ao focar no input
+        document.getElementById('chatInput').addEventListener('focus', () => {
+            setTimeout(() => {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 300);
+        });
     }
 
     function mudarTab(t, b) {
@@ -168,11 +202,12 @@
         document.querySelectorAll('.tab-item').forEach(i => i.classList.remove('active'));
         document.getElementById('tab-' + t).classList.add('active-tab');
         b.classList.add('active');
+        if(t === 'chat') chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function carregarTudo() {
+    function carregarDados() {
         // Chat
-        db.ref('chat_v2').on('value', s => {
+        db.ref('chat_v3').on('value', s => {
             chatBox.innerHTML = "";
             s.forEach(child => {
                 const m = child.val();
@@ -182,7 +217,7 @@
                         <span class="msg-name">${m.nick}</span>
                         ${m.rep?`<div style="font-size:0.7rem; opacity:0.6; border-left:2px solid white; padding-left:5px; margin-bottom:5px;">${m.rep}</div>`:''}
                         ${m.txt}
-                        ${souEu?`<span onclick="event.stopPropagation(); apagar('chat_v2/${child.key}')" style="margin-left:8px; cursor:pointer; opacity:0.5">🗑️</span>`:''}
+                        ${souEu?`<span onclick="event.stopPropagation(); apagar('chat_v3/${child.key}')" style="margin-left:8px; opacity:0.3">🗑️</span>`:''}
                     </div>`;
             });
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -190,37 +225,37 @@
         });
 
         // Mural
-        db.ref('mural_v2').on('value', s => {
+        db.ref('mural_v3').on('value', s => {
             muralBox.innerHTML = "";
             s.forEach(child => {
                 const p = child.val();
-                muralBox.innerHTML += `<div class="card"><span class="msg-name" style="color:var(--p)">${p.nick} postou:</span>${p.txt} <span onclick="apagar('mural_v2/${child.key}')" style="float:right; cursor:pointer">✅</span></div>`;
+                muralBox.innerHTML += `<div class="card"><span class="msg-name" style="color:var(--p)">${p.nick}:</span>${p.txt} <span onclick="apagar('mural_v3/${child.key}')" style="float:right">✅</span></div>`;
             });
         });
 
-        // Listas Dinâmicas
-        db.ref('listas_v2').on('value', s => {
+        // Listas
+        db.ref('listas_v3').on('value', s => {
             document.getElementById('area-listas').innerHTML = "";
             s.forEach(pasta => {
                 const nome = pasta.key;
                 let itens = "";
                 pasta.child('itens').forEach(it => {
-                    itens += `<div class="item-row"><span>${it.val().txt}</span><span onclick="apagar('listas_v2/${nome}/itens/${it.key}')" class="btn-check">✅</span></div>`;
+                    itens += `<div class="item-row"><span>${it.val().txt}</span><span onclick="apagar('listas_v3/${nome}/itens/${it.key}')">✅</span></div>`;
                 });
                 document.getElementById('area-listas').innerHTML += `
                     <div class="card">
-                        <div class="list-header"><b>${nome}</b> <small onclick="apagar('listas_v2/${nome}')" style="color:red; cursor:pointer">Eliminar</small></div>
+                        <div class="list-header"><b>${nome}</b> <small onclick="apagar('listas_v3/${nome}')" style="color:red">Excluir</small></div>
                         ${itens}
-                        <div class="input-area" style="margin-top:10px; box-shadow:none; background:#fdfdfd; border:1px solid #eee;">
-                            <input id="in-${nome}" placeholder="Novo item...">
-                            <button class="btn-circle" onclick="addItem('${nome}')" style="width:30px; height:30px; font-size:0.9rem;">+</button>
+                        <div class="input-area" style="margin-top:10px; background:#fff">
+                            <input id="in-${nome}" placeholder="Item...">
+                            <button class="btn-circle" onclick="addItem('${nome}')" style="width:30px; height:30px">+</button>
                         </div>
                     </div>`;
             });
         });
 
         // Digitando
-        db.ref('status_v2/dig').on('value', s => {
+        db.ref('status_v3/dig').on('value', s => {
             const d = s.val();
             document.getElementById('digitando-aviso').innerText = (d && d.u !== myNick && d.ativo) ? ` - ${d.u} está a escrever...` : "";
         });
@@ -229,30 +264,30 @@
     function enviarChat() {
         const t = chatInput.value;
         if(!t) return;
-        db.ref('chat_v2').push({ uid: user.uid, nick: myNick, txt: t, rep: rMsg });
+        db.ref('chat_v3').push({ uid: user.uid, nick: myNick, txt: t, rep: rMsg });
         chatInput.value = ""; cancelarRep();
-        db.ref('status_v2/dig').set({ ativo: false });
+        db.ref('status_v3/dig').set({ ativo: false });
     }
 
     function enviarMural() {
         const t = muralInput.value;
-        if(t) { db.ref('mural_v2').push({ nick: myNick, txt: t }); muralInput.value = ""; }
+        if(t) { db.ref('mural_v3').push({ nick: myNick, txt: t }); muralInput.value = ""; }
     }
 
     function criarLista() {
         const n = novaListaInput.value;
-        if(n) { db.ref('listas_v2/' + n).set({ dono: myNick }); novaListaInput.value = ""; }
+        if(n) { db.ref('listas_v3/' + n).set({ dono: myNick }); novaListaInput.value = ""; }
     }
 
     function addItem(p) {
         const v = document.getElementById('in-'+p).value;
-        if(v) { db.ref('listas_v2/'+p+'/itens').push({ txt: v }); document.getElementById('in-'+p).value = ""; }
+        if(v) { db.ref('listas_v3/'+p+'/itens').push({ txt: v }); document.getElementById('in-'+p).value = ""; }
     }
 
-    function digitando() { db.ref('status_v2/dig').set({ u: myNick, ativo: chatInput.value.length > 0 }); }
+    function emitirDigitando() { db.ref('status_v3/dig').set({ u: myNick, ativo: chatInput.value.length > 0 }); }
     function prepararRep(t) { rMsg = t; document.getElementById('reply-text').innerText = "A responder: " + t; document.getElementById('reply-box').style.display = "block"; chatInput.focus(); }
     function cancelarRep() { rMsg = null; document.getElementById('reply-box').style.display = "none"; }
-    function apagar(c) { if(confirm("Desejas apagar/concluir?")) db.ref(c).remove(); }
+    function apagar(c) { if(confirm("Apagar?")) db.ref(c).remove(); }
 </script>
 </body>
 </html>

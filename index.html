@@ -1,101 +1,88 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nosso Espaço 💖</title>
     <link rel="manifest" href="manifest.json">
-    
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    
     <style>
-        :root { 
-            --primary: #ff758f; 
-            --bg: #fff5f6; 
-            --accent: #c9184a;
-            --text-dark: #592d33;
-        }
+        :root { --primary: #ff758f; --bg: #fff5f6; --accent: #c9184a; --text: #592d33; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--text); }
+        .header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
+        .container { padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(255,117,143,0.1); margin-bottom: 15px; position: relative; }
         
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: var(--bg); 
-            margin: 0; padding: 20px; padding-bottom: 90px;
-            color: var(--text-dark);
-        }
+        /* Contador */
+        .contador-dias { text-align: center; font-weight: bold; color: var(--accent); margin-bottom: 10px; font-size: 0.9rem; background: #fff0f3; padding: 10px; border-radius: 12px; }
 
-        .card { 
-            background: white; padding: 25px; border-radius: 25px; 
-            box-shadow: 0 8px 20px rgba(255, 117, 143, 0.15); 
-            margin-bottom: 20px; border: 1px solid rgba(255, 179, 193, 0.3);
-        }
+        /* Chat */
+        .chat-box { height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding: 5px; }
+        .msg { padding: 10px 14px; border-radius: 18px; max-width: 75%; font-size: 0.95rem; line-height: 1.4; position: relative; }
+        .msg.me { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        .msg.other { align-self: flex-start; background: #fce4ec; color: #333; border-bottom-left-radius: 2px; }
+        .msg-info { font-size: 0.65rem; font-weight: bold; margin-bottom: 2px; display: block; opacity: 0.7; }
 
-        h2 { color: var(--accent); font-size: 1.3rem; margin: 0 0 20px 0; text-align: center; }
+        /* Listas */
+        .lista-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ffebee; }
+        .badge { position: absolute; top: 12px; right: 20%; width: 10px; height: 10px; background: red; border-radius: 50%; display: none; }
 
-        .pensamento-box { 
-            background: #fff0f3; padding: 20px; border-radius: 15px; 
-            font-style: italic; border: 1px dashed var(--primary); 
-            font-size: 1.1rem; color: #800e13; text-align: center;
-            margin-bottom: 20px; line-height: 1.4;
-        }
-
-        input { 
-            width: 100%; padding: 14px; border: 2px solid #ffccd5; 
-            border-radius: 12px; margin-bottom: 15px; box-sizing: border-box;
-            outline: none; font-size: 1rem;
-        }
-
-        button { 
-            width: 100%; background: linear-gradient(135deg, #ff758f, #ff4d6d); 
-            color: white; border: none; padding: 15px; border-radius: 12px; 
-            font-weight: bold; box-shadow: 0 4px 10px rgba(255, 77, 109, 0.3);
-        }
-
-        .item-lista { 
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 5px; border-bottom: 1px solid #ffccd5; 
-        }
-
-        .user-tag { font-size: 0.7rem; color: var(--primary); font-weight: bold; display: block; }
-
-        .tab-bar { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: white; display: flex; 
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
-            border-top-left-radius: 20px; border-top-right-radius: 20px;
-        }
-
-        .tab-btn { flex: 1; padding: 20px; background: none; color: #ffb3c1; border: none; font-weight: bold; }
+        input { width: 100%; padding: 12px; border: 2px solid #ffccd5; border-radius: 12px; margin-bottom: 8px; box-sizing: border-box; outline: none; }
+        button { width: 100%; background: linear-gradient(135deg, #ff758f, #ff4d6d); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; }
+        
+        .tab-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #eee; padding-bottom: env(safe-area-inset-bottom); }
+        .tab-btn { flex: 1; padding: 18px; background: none; border: none; color: #ffb3c1; font-weight: bold; font-size: 0.75rem; position: relative; }
         .tab-btn.active { color: var(--accent); border-top: 3px solid var(--accent); }
     </style>
 </head>
 <body>
 
-    <div id="view-pensar">
+    <audio id="som-ping" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
+
+    <div class="header"><h2>Nosso Espaço ❤️</h2></div>
+
+    <div id="view-chat" class="container">
+        <div class="contador-dias" id="contador-container">
+            🗓️ Juntos há <span id="num-dias">...</span> dias
+        </div>
+
         <div class="card">
-            <h2>💭 Pensamento do Dia</h2>
-            <div id="texto-pensamento" class="pensamento-box">Carregando...</div>
-            <input type="text" id="input-pensar" placeholder="No que seu par deve pensar?">
-            <button onclick="enviarPensamento()">Mudar Pensamento ✨</button>
+            <small>💭 Pensamento do Dia</small>
+            <div id="pensamento-texto" style="font-style: italic; margin: 8px 0; color: var(--accent); font-size: 1.1rem;">Carregando...</div>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="input-pensamento" placeholder="Novo pensamento..." style="margin:0; font-size: 0.8rem;">
+                <button onclick="mudarPensamento()" style="width:80px; padding:5px; font-size: 0.7rem;">Mudar</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="chat-box" id="chat-conteudo"></div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="input-msg" placeholder="Escreva aqui..." style="margin:0;">
+                <button onclick="enviarMsg()" style="width: 60px;">✈️</button>
+            </div>
         </div>
     </div>
 
-    <div id="view-lista" style="display:none;">
+    <div id="view-listas" class="container" style="display:none;">
         <div class="card">
-            <h2>📝 Nossa Lista</h2>
-            <input type="text" id="input-lista" placeholder="Adicione um desejo...">
-            <button onclick="adicionarItem()">Adicionar à Lista 💗</button>
-            <div id="lista-itens" style="margin-top: 15px;"></div>
+            <h3>📂 Novas Listas</h3>
+            <input type="text" id="nome-nova-lista" placeholder="Nome da pasta (ex: Filmes)">
+            <button onclick="criarLista()">Criar Pasta</button>
         </div>
+        <div id="area-listas"></div>
     </div>
 
     <nav class="tab-bar">
-        <button class="tab-btn active" id="btn-p" onclick="mudarAba('p')">PENSAR</button>
-        <button class="tab-btn" id="btn-l" onclick="mudarAba('l')">LISTA</button>
+        <button class="tab-btn active" id="btn-c" onclick="mudarAba('c')">MENSAGENS</button>
+        <button class="tab-btn" id="btn-l" onclick="mudarAba('l')">
+            LISTAS <span id="badge-l" class="badge"></span>
+        </button>
     </nav>
 
     <script>
-        // --- CONFIGURAÇÃO FIREBASE ---
+        // --- CONFIGURAÇÃO ---
         const firebaseConfig = {
   apiKey: "AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
   authDomain: "manuu-c23a7.firebaseapp.com",
@@ -106,66 +93,99 @@
   appId: "1:378235951611:web:72c855fbb5ccdb1a84535e",
   measurementId: "G-2V1EXW1794"
 };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const CHAVE_DUPLA = "26-01-2025"; 
+        
+        // CHAVE DUPLA E DATA DE INÍCIO
+        const CHAVE_DUPLA = "26012025"; 
+        const DATA_INICIO = new Date("2025-01-26");
 
-        // --- LÓGICA DE IDENTIFICAÇÃO ---
-        let meuNome = localStorage.getItem('meuNome');
-        if (!meuNome) {
-            meuNome = prompt("Como você quer ser chamado(a) no app?");
-            if(!meuNome) meuNome = "Alguém";
-            localStorage.setItem('meuNome', meuNome);
+        let meuNome = localStorage.getItem('meuNome') || prompt("Quem é você?");
+        localStorage.setItem('meuNome', meuNome || "Alguém");
+
+        // Lógica do Contador
+        function atualizarContador() {
+            const hoje = new Date();
+            const diferenca = hoje - DATA_INICIO;
+            const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+            document.getElementById('num-dias').innerText = dias;
         }
+        atualizarContador();
+
+        let primeiraCargaChat = true;
+        let primeiraCargaListas = true;
 
         // Pensamento
-        db.ref(CHAVE_DUPLA + '/pensar').on('value', (snap) => {
-            document.getElementById('texto-pensamento').innerText = snap.val() || "Nada definido...";
-        });
-
-        function enviarPensamento() {
-            const txt = document.getElementById('input-pensar').value;
-            if(txt) {
-                db.ref(CHAVE_DUPLA + '/pensar').set(`${meuNome}: ${txt}`);
-                document.getElementById('input-pensar').value = '';
-            }
+        db.ref(CHAVE_DUPLA + '/pensar').on('value', s => document.getElementById('pensamento-texto').innerText = s.val() || "Defina um pensamento...");
+        function mudarPensamento() {
+            const t = document.getElementById('input-pensamento').value;
+            if(t) { db.ref(CHAVE_DUPLA + '/pensar').set(t); document.getElementById('input-pensamento').value = ''; }
         }
 
-        // Lista
-        db.ref(CHAVE_DUPLA + '/lista').on('value', (snap) => {
-            const listDiv = document.getElementById('lista-itens');
-            listDiv.innerHTML = '';
-            const data = snap.val();
-            for(let id in data) {
-                listDiv.innerHTML += `
-                    <div class="item-lista">
-                        <div>
-                            <span class="user-tag">${data[id].autor}</span>
-                            <span>${data[id].texto}</span>
-                        </div>
-                        <span style="color:red" onclick="removerItem('${id}')">✕</span>
-                    </div>`;
-            }
+        // Chat com Som
+        db.ref(CHAVE_DUPLA + '/chat').limitToLast(20).on('value', s => {
+            const box = document.getElementById('chat-conteudo');
+            box.innerHTML = '';
+            s.forEach(child => {
+                const m = child.val();
+                const classe = m.user === meuNome ? 'me' : 'other';
+                box.innerHTML += `<div class="msg ${classe}"><span class="msg-info">${m.user}</span>${m.text}</div>`;
+            });
+            box.scrollTop = box.scrollHeight;
+            if(!primeiraCargaChat) document.getElementById('som-ping').play().catch(()=>{});
+            primeiraCargaChat = false;
         });
 
-        function adicionarItem() {
-            const val = document.getElementById('input-lista').value;
-            if(val) {
-                db.ref(CHAVE_DUPLA + '/lista').push({
-                    texto: val,
-                    autor: meuNome
+        function enviarMsg() {
+            const t = document.getElementById('input-msg').value;
+            if(t) { db.ref(CHAVE_DUPLA + '/chat').push({user: meuNome, text: t}); document.getElementById('input-msg').value = ''; }
+        }
+
+        // Listas com Bolinha Vermelha
+        db.ref(CHAVE_DUPLA + '/pastas').on('value', s => {
+            const area = document.getElementById('area-listas');
+            area.innerHTML = '';
+            if(!primeiraCargaListas && document.getElementById('view-listas').style.display === 'none') {
+                document.getElementById('badge-l').style.display = 'block';
+            }
+            s.forEach(pasta => {
+                const nome = pasta.key;
+                let itensHtml = '';
+                pasta.child('itens').forEach(it => {
+                    itensHtml += `<div class="lista-item"><span>${it.val().txt}</span><small style="color:red" onclick="removerItem('${nome}','${it.key}')">✕</small></div>`;
                 });
-                document.getElementById('input-lista').value = '';
-            }
-        }
+                area.innerHTML += `
+                    <div class="card">
+                        <h4 style="margin:0 0 10px 0">${nome}</h4>
+                        <div>${itensHtml}</div>
+                        <div style="display:flex; gap:5px; margin-top:10px;">
+                            <input type="text" id="in-${nome}" placeholder="Novo item..." style="margin:0; padding:8px;">
+                            <button onclick="addItem('${nome}')" style="width:40px">+</button>
+                        </div>
+                        <button onclick="removerPasta('${nome}')" style="background:none; color:red; font-size:0.6rem; margin-top:10px; width: auto; padding: 0;">Apagar Pasta</button>
+                    </div>`;
+            });
+            primeiraCargaListas = false;
+        });
 
-        function removerItem(id) { db.ref(CHAVE_DUPLA + '/lista/' + id).remove(); }
+        function criarLista() {
+            const n = document.getElementById('nome-nova-lista').value;
+            if(n) { db.ref(CHAVE_DUPLA + '/pastas/' + n).set({criado: true}); document.getElementById('nome-nova-lista').value = ''; }
+        }
+        function addItem(p) {
+            const v = document.getElementById('in-' + p).value;
+            if(v) { db.ref(CHAVE_DUPLA + '/pastas/' + p + '/itens').push({txt: v}); document.getElementById('in-' + p).value = ''; }
+        }
+        function removerItem(p, i) { db.ref(CHAVE_DUPLA + '/pastas/' + p + '/itens/' + i).remove(); }
+        function removerPasta(p) { if(confirm("Apagar lista inteira?")) db.ref(CHAVE_DUPLA + '/pastas/' + p).remove(); }
 
         function mudarAba(aba) {
-            document.getElementById('view-pensar').style.display = aba === 'p' ? 'block' : 'none';
-            document.getElementById('view-lista').style.display = aba === 'l' ? 'block' : 'none';
-            document.getElementById('btn-p').classList.toggle('active', aba === 'p');
+            document.getElementById('view-chat').style.display = aba === 'c' ? 'block' : 'none';
+            document.getElementById('view-listas').style.display = aba === 'l' ? 'block' : 'none';
+            document.getElementById('btn-c').classList.toggle('active', aba === 'c');
             document.getElementById('btn-l').classList.toggle('active', aba === 'l');
+            if(aba === 'l') document.getElementById('badge-l').style.display = 'none';
         }
     </script>
 </body>

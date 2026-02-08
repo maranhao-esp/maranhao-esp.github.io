@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosso Espaço 💖</title>
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root { 
+            --primary: #ff758f; 
+            --bg: #fff5f6; 
+            --accent: #c9184a;
+            --text-dark: #592d33;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            margin: 0; padding: 20px; padding-bottom: 90px;
+            color: var(--text-dark);
+        }
+
+        .card { 
+            background: white; padding: 25px; border-radius: 25px; 
+            box-shadow: 0 8px 20px rgba(255, 117, 143, 0.15); 
+            margin-bottom: 20px; border: 1px solid rgba(255, 179, 193, 0.3);
+        }
+
+        h2 { color: var(--accent); font-size: 1.3rem; margin: 0 0 20px 0; text-align: center; }
+
+        .pensamento-box { 
+            background: #fff0f3; padding: 20px; border-radius: 15px; 
+            font-style: italic; border: 1px dashed var(--primary); 
+            font-size: 1.1rem; color: #800e13; text-align: center;
+            margin-bottom: 20px; line-height: 1.4;
+        }
+
+        input { 
+            width: 100%; padding: 14px; border: 2px solid #ffccd5; 
+            border-radius: 12px; margin-bottom: 15px; box-sizing: border-box;
+            outline: none; font-size: 1rem;
+        }
+
+        button { 
+            width: 100%; background: linear-gradient(135deg, #ff758f, #ff4d6d); 
+            color: white; border: none; padding: 15px; border-radius: 12px; 
+            font-weight: bold; box-shadow: 0 4px 10px rgba(255, 77, 109, 0.3);
+        }
+
+        .item-lista { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5px; border-bottom: 1px solid #ffccd5; 
+        }
+
+        .user-tag { font-size: 0.7rem; color: var(--primary); font-weight: bold; display: block; }
+
+        .tab-bar { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: white; display: flex; 
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+            border-top-left-radius: 20px; border-top-right-radius: 20px;
+        }
+
+        .tab-btn { flex: 1; padding: 20px; background: none; color: #ffb3c1; border: none; font-weight: bold; }
+        .tab-btn.active { color: var(--accent); border-top: 3px solid var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div id="view-pensar">
+        <div class="card">
+            <h2>💭 Pensamento do Dia</h2>
+            <div id="texto-pensamento" class="pensamento-box">Carregando...</div>
+            <input type="text" id="input-pensar" placeholder="No que seu par deve pensar?">
+            <button onclick="enviarPensamento()">Mudar Pensamento ✨</button>
+        </div>
+    </div>
+
+    <div id="view-lista" style="display:none;">
+        <div class="card">
+            <h2>📝 Nossa Lista</h2>
+            <input type="text" id="input-lista" placeholder="Adicione um desejo...">
+            <button onclick="adicionarItem()">Adicionar à Lista 💗</button>
+            <div id="lista-itens" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <nav class="tab-bar">
+        <button class="tab-btn active" id="btn-p" onclick="mudarAba('p')">PENSAR</button>
+        <button class="tab-btn" id="btn-l" onclick="mudarAba('l')">LISTA</button>
+    </nav>
+
+    <script>
+        // --- CONFIGURAÇÃO FIREBASE ---
+        const firebaseConfig = {
+  apiKey: "AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
+  authDomain: "manuu-c23a7.firebaseapp.com",
+  databaseURL: "https://manuu-c23a7-default-rtdb.firebaseio.com",
+  projectId: "manuu-c23a7",
+  storageBucket: "manuu-c23a7.firebasestorage.app",
+  messagingSenderId: "378235951611",
+  appId: "1:378235951611:web:72c855fbb5ccdb1a84535e",
+  measurementId: "G-2V1EXW1794"
+};
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const CHAVE_DUPLA = "nossa_chave_secreta_unica"; 
+
+        // --- LÓGICA DE IDENTIFICAÇÃO ---
+        let meuNome = localStorage.getItem('meuNome');
+        if (!meuNome) {
+            meuNome = prompt("Como você quer ser chamado(a) no app?");
+            if(!meuNome) meuNome = "Alguém";
+            localStorage.setItem('meuNome', meuNome);
+        }
+
+        // Pensamento
+        db.ref(CHAVE_DUPLA + '/pensar').on('value', (snap) => {
+            document.getElementById('texto-pensamento').innerText = snap.val() || "Nada definido...";
+        });
+
+        function enviarPensamento() {
+            const txt = document.getElementById('input-pensar').value;
+            if(txt) {
+                db.ref(CHAVE_DUPLA + '/pensar').set(`${meuNome}: ${txt}`);
+                document.getElementById('input-pensar').value = '';
+            }
+        }
+
+        // Lista
+        db.ref(CHAVE_DUPLA + '/lista').on('value', (snap) => {
+            const listDiv = document.getElementById('lista-itens');
+            listDiv.innerHTML = '';
+            const data = snap.val();
+            for(let id in data) {
+                listDiv.innerHTML += `
+                    <div class="item-lista">
+                        <div>
+                            <span class="user-tag">${data[id].autor}</span>
+                            <span>${data[id].texto}</span>
+                        </div>
+                        <span style="color:red" onclick="removerItem('${id}')">✕</span>
+                    </div>`;
+            }
+        });
+
+        function adicionarItem() {
+            const val = document.getElementById('input-lista').value;
+            if(val) {
+                db.ref(CHAVE_DUPLA + '/lista').push({
+                    texto: val,
+                    autor: meuNome
+                });
+                document.getElementById('input-lista').value = '';
+            }
+        }
+
+        function removerItem(id) { db.ref(CHAVE_DUPLA + '/lista/' + id).remove(); }
+
+        function mudarAba(aba) {
+            document.getElementById('view-pensar').style.display = aba === 'p' ? 'block' : 'none';
+            document.getElementById('view-lista').style.display = aba === 'l' ? 'block' : 'none';
+            document.getElementById('btn-p').classList.toggle('active', aba === 'p');
+            document.getElementById('btn-l').classList.toggle('active', aba === 'l');
+        }
+    </script>
+</body>
+</html>

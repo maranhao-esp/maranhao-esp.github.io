@@ -1,212 +1,150 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nosso Espaço 💖</title>
-    <link rel="manifest" href="manifest.json">
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <style>
-        :root { --primary: #ff758f; --bg: #fff5f6; --accent: #c9184a; --text: #592d33; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; color: var(--text); overflow-x: hidden; }
-        
-        .header { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
-        .container { padding: 15px; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(255,117,143,0.1); margin-bottom: 15px; position: relative; }
-        
-        .contador-dias { text-align: center; font-weight: bold; color: var(--accent); margin-bottom: 10px; font-size: 0.9rem; background: #fff0f3; padding: 10px; border-radius: 12px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nosso Espaço ❤️</title>
 
-        .chat-box { height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding: 5px; }
-        .msg { padding: 12px 16px; border-radius: 18px; max-width: 75%; font-size: 0.95rem; line-height: 1.4; position: relative; cursor: pointer; }
-        .msg.me { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
-        .msg.other { align-self: flex-start; background: #fce4ec; color: #333; border-bottom-left-radius: 2px; }
-        
-        .reacao-badge { position: absolute; bottom: -10px; right: 10px; background: white; border-radius: 10px; padding: 2px 6px; font-size: 0.8rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #eee; color: #333; }
-        .msg.other .reacao-badge { left: 10px; right: auto; }
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
 
-        .menu-reacoes { 
-            display: none; position: absolute; background: white; border-radius: 25px; padding: 8px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; bottom: 110%; left: 50%; 
-            transform: translateX(-50%); border: 1px solid #ffccd5; width: auto; max-width: 280px;
-            flex-wrap: nowrap; justify-content: center; align-items: center; gap: 8px; animation: subir 0.2s ease;
-        }
-        .menu-reacoes.expandido { flex-wrap: wrap; border-radius: 15px; width: 220px; }
-        @keyframes subir { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-
-        .emoji-btn { cursor: pointer; font-size: 1.3rem; transition: transform 0.1s; }
-        .btn-mais { background: #f0f0f0; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; color: #666; }
-
-        input { width: 100%; padding: 12px; border: 2px solid #ffccd5; border-radius: 12px; box-sizing: border-box; outline: none; }
-        button { background: linear-gradient(135deg, #ff758f, #ff4d6d); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        
-        .tab-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #eee; }
-        .tab-btn { flex: 1; padding: 18px; background: none; border: none; color: #ffb3c1; font-weight: bold; font-size: 0.75rem; }
-        .tab-btn.active { color: var(--accent); border-top: 3px solid var(--accent); }
-    </style>
+<style>
+body{font-family:sans-serif;background:#fff5f6;margin:0;padding:15px}
+.card{background:white;padding:15px;border-radius:15px;margin-bottom:10px}
+.msg{padding:10px;border-radius:15px;margin:5px 0;max-width:75%}
+.me{background:#ff758f;color:white;margin-left:auto}
+.other{background:#fce4ec}
+.reply{font-size:0.7rem;opacity:0.7;border-left:3px solid #ff758f;padding-left:5px;margin-bottom:3px}
+</style>
 </head>
+
 <body>
 
-    <audio id="som-ping" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
-    <div class="header"><h2>Nosso Espaço ❤️</h2></div>
+<h2>Nosso Espaço ❤️</h2>
+<button onclick="login()">Entrar com Google</button>
+<div id="user"></div>
 
-    <div id="view-chat" class="container">
-        <div class="contador-dias">🗓️ Juntos há <span id="num-dias">...</span> dias</div>
+<div class="card">
+<h4>💭 Pensamentos</h4>
+<div id="pensamentos"></div>
+<input id="input-pensamento">
+<button onclick="enviarPensamento()">Enviar</button>
+</div>
 
-        <div class="card">
-            <small>💭 Mural de Pensamentos</small>
-            <div id="mural-pensamentos" style="margin: 10px 0; display: flex; flex-direction: column; gap: 8px;"></div>
-            <div style="display:flex; gap:5px;">
-                <input type="text" id="input-pensamento" placeholder="Novo pensamento..." style="font-size: 0.8rem;">
-                <button onclick="enviarPensamento()" style="width:70px; padding:5px; font-size: 0.7rem;">Enviar</button>
-            </div>
-        </div>
+<div class="card">
+<div id="chat"></div>
+<div id="digitando"></div>
+<input id="msg" oninput="digitando()">
+<button onclick="enviar()">Enviar</button>
+</div>
 
-        <div class="card">
-            <div class="chat-box" id="chat-conteudo"></div>
-            <div style="display: flex; gap: 8px; margin-top: 10px;">
-                <input type="text" id="input-msg" placeholder="Mensagem...">
-                <button onclick="enviarMsg()" style="width: 50px;">✈️</button>
-            </div>
-        </div>
-    </div>
+<script>
+const firebaseConfig={
+apiKey:"AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
+authDomain:"manuu-c23a7.firebaseapp.com",
+databaseURL:"https://manuu-c23a7-default-rtdb.firebaseio.com",
+projectId:"manuu-c23a7"
+};
 
-    <div id="view-listas" class="container" style="display:none;">
-        <div class="card">
-            <h3>📂 Criar Pasta</h3>
-            <input type="text" id="nome-nova-lista" placeholder="Nome (Ex: Filmes)">
-            <button onclick="criarLista()" style="margin-top:10px;">Criar</button>
-        </div>
-        <div id="area-listas"></div>
-    </div>
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+const auth=firebase.auth();
 
-    <nav class="tab-bar">
-        <button class="tab-btn active" id="btn-c" onclick="mudarAba('c')">MENSAGENS</button>
-        <button class="tab-btn" id="btn-l" onclick="mudarAba('l')">LISTAS</button>
-    </nav>
+const emailsPermitidos=[
+"lorenzemanuelly@gmail.com",
+"caua60198@gmail.com"
+];
 
-    <script>
-        const firebaseConfig = {
-          apiKey: "AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
-          authDomain: "manuu-c23a7.firebaseapp.com",
-          databaseURL: "https://manuu-c23a7-default-rtdb.firebaseio.com",
-          projectId: "manuu-c23a7",
-          storageBucket: "manuu-c23a7.firebasestorage.app",
-          messagingSenderId: "378235951611",
-          appId: "1:378235951611:web:72c855fbb5ccdb1a84535e",
-          measurementId: "G-2V1EXW1794"
-        };
+let user=null;
+let respondendo=null;
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const CHAVE = "26012025"; 
-        const DATA_INICIO = new Date("2025-01-26");
+function login(){
+const provider=new firebase.auth.GoogleAuthProvider();
+auth.signInWithPopup(provider);
+}
 
-        let meuNome = localStorage.getItem('meuNome') || prompt("Quem é você?");
-        localStorage.setItem('meuNome', meuNome || "Alguém");
+auth.onAuthStateChanged(u=>{
+if(!u)return;
+if(!emailsPermitidos.includes(u.email)){
+alert("Sem permissão");
+auth.signOut();
+return;
+}
+user=u;
+document.getElementById("user").innerText="Logado: "+u.displayName;
+carregar();
+});
 
-        document.getElementById('num-dias').innerText = Math.floor((new Date() - DATA_INICIO) / (1000 * 60 * 60 * 24));
+function carregar(){
 
-        // Mural
-        db.ref(CHAVE + '/mural').on('value', s => {
-            const mural = document.getElementById('mural-pensamentos');
-            mural.innerHTML = '';
-            s.forEach(child => {
-                mural.innerHTML += `<div style="background:#fff5f6; padding:8px 12px; border-radius:10px; border-left:4px solid var(--primary); display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:0.9rem;">"${child.val().txt}"</span>
-                    <span style="color:#2ecc71; cursor:pointer;" onclick="db.ref('${CHAVE}/mural/${child.key}').remove()">✓</span>
-                </div>`;
-            });
-        });
+db.ref("chat").on("value",s=>{
+const chat=document.getElementById("chat");
+chat.innerHTML="";
+s.forEach(c=>{
+const m=c.val();
+let div=document.createElement("div");
+div.className="msg "+(m.uid===user.uid?"me":"other");
 
-        function enviarPensamento() {
-            const t = document.getElementById('input-pensamento').value;
-            if(t) { db.ref(CHAVE + '/mural').push({txt: t}); document.getElementById('input-pensamento').value = ''; }
-        }
+let hora=new Date(m.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 
-        // Chat
-        let cargaInicial = true;
-        db.ref(CHAVE + '/chat').on('value', s => {
-            const box = document.getElementById('chat-conteudo');
-            box.innerHTML = '';
-            s.forEach(child => {
-                const m = child.val();
-                const id = child.key;
-                const souEu = m.user === meuNome;
-                const reacao = m.reacao ? `<div class="reacao-badge">${m.reacao}</div>` : '';
-                
-                box.innerHTML += `
-                    <div class="msg ${souEu ? 'me' : 'other'}" onclick="mostrarMenu('${id}')">
-                        <small style="font-size:0.6rem; opacity:0.7">${m.user}</small><br>${m.text}${reacao}
-                        <div id="menu-${id}" class="menu-reacoes" onclick="event.stopPropagation()">
-                            <span class="emoji-btn" onclick="reagir('${id}', '❤️')">❤️</span>
-                            <span class="emoji-btn" onclick="reagir('${id}', '🥰')">🥰</span>
-                            <span class="emoji-btn" onclick="reagir('${id}', '😂')">😂</span>
-                            <span class="emoji-btn" onclick="reagir('${id}', '🥺')">🥺</span>
-                            <div class="btn-mais" id="btn-m-${id}" onclick="expandir('${id}')">+</div>
-                            <div id="extra-${id}" style="display:none; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:5px; border-top:1px solid #eee; padding-top:5px;">
-                                <span class="emoji-btn" onclick="reagir('${id}', '🔥')">🔥</span>
-                                <span class="emoji-btn" onclick="reagir('${id}', '✨')">✨</span>
-                                <span class="emoji-btn" onclick="reagir('${id}', '🫦')">🫦</span>
-                                <span class="emoji-btn" onclick="reagir('${id}', '😏')">😏</span>
-                                <span class="emoji-btn" onclick="reagir('${id}', '👀')">👀</span>
-                                <span class="emoji-btn" onclick="reagir('${id}', '🗑️')">🗑️ Apagar</span>
-                            </div>
-                        </div>
-                    </div>`;
-            });
-            box.scrollTop = box.scrollHeight;
-            if(!cargaInicial) document.getElementById('som-ping').play().catch(()=>{});
-            cargaInicial = false;
-        });
+div.innerHTML=
+(m.reply?`<div class='reply'>${m.reply}</div>`:"")+
+m.nome+": "+m.text+
+"<br><small>"+hora+"</small>";
 
-        function enviarMsg() {
-            const t = document.getElementById('input-msg').value;
-            if(t) { db.ref(CHAVE + '/chat').push({user: meuNome, text: t}); document.getElementById('input-msg').value = ''; }
-        }
+div.onclick=()=>{respondendo=m.text};
+chat.appendChild(div);
+});
+});
 
-        function mostrarMenu(id) {
-            document.querySelectorAll('.menu-reacoes').forEach(m => { if(m.id !== 'menu-'+id) m.style.display = 'none'; });
-            const menu = document.getElementById('menu-' + id);
-            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
-        }
+db.ref("pensamentos").on("value",s=>{
+const area=document.getElementById("pensamentos");
+area.innerHTML="";
+s.forEach(c=>{
+const p=c.val();
+area.innerHTML+=`<div>${p.nome}: ${p.text}</div>`;
+});
+});
 
-        function expandir(id) {
-            document.getElementById('menu-'+id).classList.add('expandido');
-            document.getElementById('extra-'+id).style.display = 'flex';
-            document.getElementById('btn-m-'+id).style.display = 'none';
-        }
+db.ref("digitando").on("value",s=>{
+document.getElementById("digitando").innerText=
+s.val() && s.val()!=user.displayName
+? s.val()+" está digitando..."
+:"";
+});
 
-        function reagir(id, emoji) {
-            if(emoji === '🗑️') { if(confirm("Apagar?")) db.ref(CHAVE + '/chat/' + id).remove(); }
-            else db.ref(CHAVE + '/chat/' + id).update({reacao: emoji});
-            document.getElementById('menu-' + id).style.display = 'none';
-        }
+}
 
-        // Listas
-        db.ref(CHAVE + '/pastas').on('value', s => {
-            const area = document.getElementById('area-listas'); area.innerHTML = '';
-            s.forEach(pasta => {
-                const nome = pasta.key; let itens = '';
-                pasta.child('itens').forEach(it => {
-                    itens += `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
-                        <span>${it.val().txt}</span><span style="color:#2ecc71; cursor:pointer;" onclick="db.ref('${CHAVE}/pastas/${nome}/itens/${it.key}').remove()">✅</span>
-                    </div>`;
-                });
-                area.innerHTML += `<div class="card"><h4>${nome}</h4>${itens}
-                    <div style="display:flex; gap:5px; margin-top:10px;"><input type="text" id="in-${nome}" placeholder="Item..."><button onclick="addItem('${nome}')" style="width:45px">+</button></div>
-                    <button onclick="if(confirm('Apagar pasta?')) db.ref('${CHAVE}/pastas/${nome}').remove()" style="background:none; color:red; font-size:0.6rem; margin-top:10px; width:auto; padding:0;">Excluir Pasta</button></div>`;
-            });
-        });
-        function criarLista() { const n = document.getElementById('nome-nova-lista').value; if(n) { db.ref(CHAVE + '/pastas/' + n).set({c:1}); document.getElementById('nome-nova-lista').value=''; } }
-        function addItem(p) { const v = document.getElementById('in-' + p).value; if(v) db.ref(CHAVE + '/pastas/' + p + '/itens').push({txt:v}); document.getElementById('in-' + p).value=''; }
+function enviar(){
+const t=document.getElementById("msg").value;
+if(!t)return;
+db.ref("chat").push({
+uid:user.uid,
+nome:user.displayName,
+text:t,
+reply:respondendo,
+time:Date.now()
+});
+respondendo=null;
+document.getElementById("msg").value="";
+db.ref("digitando").set("");
+}
 
-        function mudarAba(aba) {
-            document.getElementById('view-chat').style.display = aba === 'c' ? 'block' : 'none';
-            document.getElementById('view-listas').style.display = aba === 'l' ? 'block' : 'none';
-            document.getElementById('btn-c').classList.toggle('active', aba === 'c');
-            document.getElementById('btn-l').classList.toggle('active', aba === 'l');
-        }
-    </script>
+function enviarPensamento(){
+const t=document.getElementById("input-pensamento").value;
+if(!t)return;
+db.ref("pensamentos").push({
+nome:user.displayName,
+text:t
+});
+document.getElementById("input-pensamento").value="";
+}
+
+function digitando(){
+db.ref("digitando").set(user.displayName);
+}
+</script>
+
 </body>
 </html>

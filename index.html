@@ -26,11 +26,19 @@
         
         #chatBox, #muralBox, #listaBox { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 5px; }
 
+        /* CHAT */
         .msg { max-width: 80%; padding: 12px; border-radius: 20px; font-size: 0.9rem; position: relative; cursor: pointer; }
         .msg.sent { align-self: flex-end; background: var(--p); color: white; border-bottom-right-radius: 2px; }
         .msg.received { align-self: flex-start; background: white; border: 1px solid #f0f0f0; border-bottom-left-radius: 2px; }
         
-        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* CARDS (MURAL E LISTAS) */
+        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        .card-btn-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #ffbcbc; font-size: 1.1rem; cursor: pointer; }
+        
+        /* ESTILO LISTAS INTERNAS */
+        .item-lista { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 5px; border-bottom: 1px dashed #eee; }
+        .item-lista.concluido { text-decoration: line-through; opacity: 0.5; }
+        .btn-check { border: 1px solid var(--p); background: none; border-radius: 4px; color: var(--p); cursor: pointer; font-size: 0.7rem; }
 
         .input-container { padding: 10px; background: white; border-top: 1px solid #eee; flex-shrink: 0; }
         .input-area { display: flex; gap: 8px; background: #f9f9f9; padding: 5px 10px; border-radius: 30px; align-items: center; }
@@ -50,9 +58,7 @@
     <div id="login-screen">
         <div style="background: white; padding: 30px; border-radius: 30px; text-align: center; width: 85%; max-width: 350px;">
             <h2 style="color: var(--p)">Nosso Mundo ❤️</h2>
-            <button id="btn-google" style="width:100%; padding:15px; border-radius:15px; background:white; border:1px solid #ddd; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com Google
-            </button>
+            <button id="btn-google" style="width:100%; padding:15px; border-radius:15px; background:white; border:1px solid #ddd; font-weight:bold;">Entrar com Google</button>
             <div id="nickname-box" style="display:none; margin-top:20px;">
                 <input id="nickInput" placeholder="Teu apelido..." style="border: 1px solid #eee; width: 85%; margin-bottom:10px; border-radius:10px; padding: 12px;">
                 <button onclick="salvarNick()" style="background: var(--p); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold;">Entrar</button>
@@ -68,36 +74,18 @@
 
         <div id="tab-chat" class="tab-content active-tab">
             <div id="chatBox"></div>
-            <div id="reply-bar">
-                <span id="reply-text"></span>
-                <button onclick="cancelarResposta()" style="border:none; background:none; color:red; font-weight:bold;">✕</button>
-            </div>
-            <div class="input-container">
-                <div class="input-area">
-                    <input id="chatInput" placeholder="Mensagem..." oninput="tratarInput()">
-                    <button class="btn-circle" onclick="enviarChat()">✈</button>
-                </div>
-            </div>
+            <div id="reply-bar"><span id="reply-text"></span><button onclick="cancelarResposta()" style="border:none; background:none; color:red;">✕</button></div>
+            <div class="input-container"><div class="input-area"><input id="chatInput" placeholder="Mensagem..."><button class="btn-circle" onclick="enviarChat()">✈</button></div></div>
         </div>
 
         <div id="tab-mural" class="tab-content">
             <div id="muralBox"></div>
-            <div class="input-container">
-                <div class="input-area">
-                    <input id="muralInput" placeholder="Pensamento...">
-                    <button class="btn-circle" onclick="enviarMural()">✨</button>
-                </div>
-            </div>
+            <div class="input-container"><div class="input-area"><input id="muralInput" placeholder="Pensamento..."><button class="btn-circle" onclick="enviarMural()">✨</button></div></div>
         </div>
 
         <div id="tab-listas" class="tab-content">
             <div id="listaBox"></div>
-            <div class="input-container">
-                <div class="input-area">
-                    <input id="listaInput" placeholder="Item...">
-                    <button class="btn-circle" onclick="enviarLista()">📌</button>
-                </div>
-            </div>
+            <div class="input-container"><div class="input-area"><input id="listaInput" placeholder="Criar nova lista..."><button class="btn-circle" onclick="enviarLista()">➕</button></div></div>
         </div>
 
         <nav class="tab-bar" id="menu-inferior">
@@ -108,6 +96,7 @@
     </div>
 
 <script>
+    // CONFIGURAÇÃO FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
         authDomain: "manuu-c23a7.firebaseapp.com",
@@ -121,140 +110,102 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-
     let user = null, myNick = localStorage.getItem('v3_nick'), replyData = null;
 
     document.getElementById('btn-google').onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-
-    auth.onAuthStateChanged(u => {
-        if(u) {
-            user = u;
-            if(!myNick) {
-                document.getElementById('btn-google').style.display = "none";
-                document.getElementById('nickname-box').style.display = "block";
-            } else { iniciar(); }
-        }
-    });
-
-    function salvarNick() {
-        const n = document.getElementById('nickInput').value.trim();
-        if(n) { myNick = n; localStorage.setItem('v3_nick', n); iniciar(); }
-    }
+    auth.onAuthStateChanged(u => { if(u) { user = u; if(!myNick) { document.getElementById('btn-google').style.display="none"; document.getElementById('nickname-box').style.display="block"; } else { iniciar(); } } });
+    function salvarNick() { const n = document.getElementById('nickInput').value.trim(); if(n) { myNick = n; localStorage.setItem('v3_nick', n); iniciar(); } }
 
     function iniciar() {
         document.getElementById('login-screen').style.display = "none";
-        
-        const presencaRef = db.ref('status_v3/' + user.uid);
-        presencaRef.onDisconnect().remove();
-        presencaRef.set({ nick: myNick, online: true });
-
+        db.ref('status_v3/' + user.uid).onDisconnect().remove();
+        db.ref('status_v3/' + user.uid).set({ nick: myNick, online: true });
         db.ref('status_v3').on('value', s => {
-            let outros = [];
-            s.forEach(c => { if(c.key !== user.uid) outros.push(c.val().nick); });
-            const aviso = document.getElementById('status-online');
-            aviso.innerText = outros.length > 0 ? `● ${outros.join(', ')} está Online` : "● Offline";
-            aviso.style.color = outros.length > 0 ? "#2ecc71" : "#bbb";
+            let o = []; s.forEach(c => { if(c.key !== user.uid) o.push(c.val().nick); });
+            document.getElementById('status-online').innerText = o.length > 0 ? `● ${o.join(', ')} Online` : "● Offline";
         });
-
-        db.ref('digitando_v3').on('value', s => {
-            const d = s.val();
-            if(d && d.u !== myNick && d.ativo) {
-                document.getElementById('status-online').innerText = `✍️ ${d.u} está digitando...`;
-            }
-        });
-
-        carregarChat();
-        carregarMural();
-        carregarListas();
-        
-        setInterval(() => {
-            const dias = Math.floor((new Date() - new Date("2025-02-26")) / 86400000);
-            document.getElementById('contador').innerText = `❤️ ${dias} dias juntos`;
-        }, 1000);
+        carregarChat(); carregarMural(); carregarListas();
+        setInterval(() => { document.getElementById('contador').innerText = `❤️ ${Math.floor((new Date() - new Date("2025-02-26"))/86400000)} dias juntos`; }, 1000);
     }
 
-    function mudarTab(tabName, btn) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
-        document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + tabName).classList.add('active-tab');
-        btn.classList.add('active');
-        if(tabName === 'chat') chatBox.scrollTop = chatBox.scrollHeight;
+    function mudarTab(t, b) {
+        document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active-tab'));
+        document.querySelectorAll('.tab-item').forEach(x => x.classList.remove('active'));
+        document.getElementById('tab-'+t).classList.add('active-tab');
+        b.classList.add('active');
     }
 
-    function enviarChat() {
-        const t = chatInput.value.trim();
-        if(!t) return;
-        db.ref('chat_v3').push({ uid: user.uid, nick: myNick, txt: t, reply: replyData });
-        chatInput.value = "";
-        cancelarResposta();
-        db.ref('digitando_v3').set({ u: myNick, ativo: false });
-    }
-
+    // CHAT
     function carregarChat() {
-        db.ref('chat_v3').limitToLast(40).on('value', s => {
+        db.ref('chat_v3').limitToLast(30).on('value', s => {
             chatBox.innerHTML = "";
-            s.forEach(child => {
-                const m = child.val();
-                const souEu = m.uid === user.uid;
-                let r = m.reply ? `<small style="display:block;opacity:0.6;font-size:0.7rem;">↳ ${m.reply}</small>` : "";
-                const div = document.createElement('div');
-                div.className = `msg ${souEu?'sent':'received'}`;
-                div.innerHTML = `${r}<b>${m.nick}</b><br>${m.txt}`;
-                div.onclick = () => prepararResposta(m.txt, m.nick);
-                chatBox.appendChild(div);
+            s.forEach(c => {
+                const m = c.val(); const eu = m.uid === user.uid;
+                chatBox.innerHTML += `<div class="msg ${eu?'sent':'received'}">${m.reply?'<small>↳'+m.reply+'</small><br>':''}<b>${m.nick}</b><br>${m.txt}</div>`;
             });
             chatBox.scrollTop = chatBox.scrollHeight;
         });
     }
+    function enviarChat() { const t = chatInput.value.trim(); if(t) { db.ref('chat_v3').push({uid:user.uid, nick:myNick, txt:t}); chatInput.value=""; } }
 
-    function prepararResposta(t, a) {
-        replyData = `${a}: ${t}`;
-        document.getElementById('reply-text').innerText = `Respondendo: ${t.substring(0,15)}...`;
-        document.getElementById('reply-bar').style.display = "flex";
-        chatInput.focus();
-    }
-    function cancelarResposta() { replyData = null; document.getElementById('reply-bar').style.display = "none"; }
-    function tratarInput() { db.ref('digitando_v3').set({ u: myNick, ativo: chatInput.value.length > 0 }); }
-
-    function enviarMural() {
-        const t = muralInput.value.trim();
-        if(t) { db.ref('mural_v3').push({ nick: myNick, txt: t }); muralInput.value = ""; }
-    }
-
+    // MURAL
+    function enviarMural() { const t = muralInput.value.trim(); if(t) { db.ref('mural_v3').push({nick:myNick, txt:t}); muralInput.value=""; } }
     function carregarMural() {
         db.ref('mural_v3').on('value', s => {
             muralBox.innerHTML = "";
             s.forEach(c => {
-                const m = c.val();
-                muralBox.innerHTML += `<div class="card"><b>${m.nick} pensou:</b><br>${m.txt}</div>`;
+                muralBox.innerHTML += `<div class="card"><button class="card-btn-delete" onclick="apagar('mural_v3','${c.key}')">🗑️</button><b>${c.val().nick}:</b><br>${c.val().txt}</div>`;
             });
-            muralBox.scrollTop = muralBox.scrollHeight;
         });
     }
 
+    // LISTAS (SISTEMA DE LISTA DENTRO DE LISTA)
     function enviarLista() {
         const t = listaInput.value.trim();
-        if(t) { db.ref('listas_v3').push({ txt: t }); listaInput.value = ""; }
+        if(t) { db.ref('listas_v3').push({titulo: t, itens: {}}); listaInput.value = ""; }
     }
 
     function carregarListas() {
         db.ref('listas_v3').on('value', s => {
             listaBox.innerHTML = "";
             s.forEach(c => {
-                const l = c.val();
-                listaBox.innerHTML += `<div class="card" onclick="removerLista('${c.key}')">📌 ${l.txt}</div>`;
+                const lista = c.val();
+                let itensHtml = "";
+                if(lista.itens) {
+                    Object.keys(lista.itens).forEach(itemId => {
+                        const item = lista.itens[itemId];
+                        itensHtml += `<div class="item-lista ${item.check?'concluido':''}">
+                            <button class="btn-check" onclick="checkItem('${c.key}','${itemId}',${item.check})">✓</button>
+                            ${item.txt}
+                        </div>`;
+                    });
+                }
+                listaBox.innerHTML += `
+                    <div class="card">
+                        <button class="card-btn-delete" onclick="apagar('listas_v3','${c.key}')">🗑️</button>
+                        <b style="color:var(--p)">📌 ${lista.titulo}</b>
+                        <div id="itens-${c.key}">${itensHtml}</div>
+                        <div style="margin-top:10px; display:flex; gap:5px;">
+                            <input id="in-${c.key}" placeholder="Add item..." style="font-size:0.8rem; padding:5px; border-radius:5px; border:1px solid #eee; flex:1;">
+                            <button onclick="addItemLista('${c.key}')" style="border:none; background:var(--p); color:white; border-radius:5px; padding:0 10px;">+</button>
+                        </div>
+                    </div>`;
             });
         });
     }
 
-    function removerLista(id) { if(confirm("Remover?")) db.ref('listas_v3').child(id).remove(); }
+    function addItemLista(listaId) {
+        const inp = document.getElementById('in-'+listaId);
+        if(inp.value.trim()) { db.ref(`listas_v3/${listaId}/itens`).push({txt: inp.value.trim(), check: false}); inp.value = ""; }
+    }
+
+    function checkItem(listaId, itemId, atual) { db.ref(`listas_v3/${listaId}/itens/${itemId}`).update({check: !atual}); }
+    function apagar(ref, id) { if(confirm("Apagar?")) db.ref(ref).child(id).remove(); }
 
     window.visualViewport.addEventListener('resize', () => {
-        let vh = window.visualViewport.height;
-        document.getElementById('app-wrapper').style.height = vh + "px";
-        document.getElementById('menu-inferior').style.display = vh < window.innerHeight * 0.8 ? "none" : "flex";
-        setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
+        document.getElementById('app-wrapper').style.height = window.visualViewport.height + "px";
     });
 </script>
 </body>
-</html>
+    </html>
+    

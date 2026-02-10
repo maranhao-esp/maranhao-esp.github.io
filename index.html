@@ -12,58 +12,110 @@
 
     <style>
         :root { --p: #ff4f87; --bg: #fff5f8; }
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; }
-        #app-wrapper { display: flex; flex-direction: column; height: 100dvh; }
         
-        #login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; }
-        .login-card { background: white; padding: 30px; border-radius: 30px; text-align: center; width: 85%; max-width: 350px; }
+        /* Evita que o corpo da página role, deixando o scroll apenas para o chat */
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: var(--bg); 
+            font-family: 'Segoe UI', sans-serif; 
+        }
+
+        #app-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100dvh; /* Usa a altura dinâmica para mobile */
+        }
         
-        header { background: white; padding: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        /* HEADER FIXO: Ele nunca some, nem com teclado aberto */
+        header { 
+            background: white; 
+            padding: 10px; 
+            text-align: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            z-index: 100;
+            flex-shrink: 0; /* Impede o header de ser espremido */
+        }
+        
+        #contador { font-weight:bold; color: var(--p); font-size: 1.1rem; }
         #status-online { font-size: 0.75rem; color: #2ecc71; font-weight: bold; margin-top: 2px; }
 
-        .tab-content { display: none; flex: 1; flex-direction: column; overflow: hidden; padding: 10px; }
+        /* Área de Conteúdo */
+        .tab-content { 
+            display: none; 
+            flex: 1; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
         .active-tab { display: flex; }
-        #chatBox { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 
-        .msg { max-width: 80%; padding: 12px; border-radius: 18px; font-size: 0.95rem; cursor: pointer; transition: opacity 0.2s; }
-        .msg:active { opacity: 0.7; }
+        /* CHATBOX: Onde o scroll acontece */
+        #chatBox { 
+            flex: 1; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            padding: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Mensagens */
+        .msg { max-width: 80%; padding: 12px; border-radius: 18px; font-size: 0.95rem; cursor: pointer; }
         .msg.sent { align-self: flex-end; background: var(--p); color: white; border-bottom-right-radius: 2px; }
         .msg.received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
         .reply-preview { font-size: 0.7rem; opacity: 0.8; border-left: 2px solid white; padding-left: 5px; margin-bottom: 4px; display: block; }
-        .received .reply-preview { border-left-color: var(--p); color: #666; }
 
-        #reply-bar { display: none; background: #eee; padding: 8px 15px; font-size: 0.8rem; border-radius: 15px 15px 0 0; justify-content: space-between; align-items: center; }
+        /* Barra de Resposta */
+        #reply-bar { 
+            display: none; 
+            background: #eee; 
+            padding: 8px 15px; 
+            font-size: 0.8rem; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
 
-        .input-container { padding: 10px; background: white; border-top: 1px solid #eee; }
+        /* Container de Input: Fica fixo acima do teclado */
+        .input-container { 
+            padding: 10px; 
+            background: white; 
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+        }
         .input-area { display: flex; gap: 8px; background: #f0f0f0; padding: 5px 12px; border-radius: 30px; align-items: center; }
         input { flex: 1; border: none; padding: 10px; outline: none; background: transparent; font-size: 1rem; }
-        .btn-circle { background: var(--p); color: white; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        
+        .btn-circle { background: var(--p); color: white; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; }
 
-        .tab-bar { background: white; display: flex; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #eee; height: 70px; }
-        .tab-item { border: none; background: none; color: #bbb; font-weight: bold; font-size: 0.7rem; flex: 1; padding-top: 10px; }
+        /* Navegação */
+        .tab-bar { background: white; display: flex; justify-content: space-around; border-top: 1px solid #eee; height: 60px; flex-shrink: 0; }
+        .tab-item { border: none; background: none; color: #bbb; font-weight: bold; font-size: 0.7rem; flex: 1; }
         .tab-item.active { color: var(--p); }
+
+        #login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <div class="login-card">
+        <div style="background: white; padding: 30px; border-radius: 30px; text-align: center; width: 85%;">
             <h2 style="color: var(--p)">Nosso Mundo ❤️</h2>
-            <button id="btn-google" style="width:100%; padding:15px; border-radius:15px; background:white; border:1px solid #ddd; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18"> Entrar com Google
-            </button>
+            <button id="btn-google" style="width:100%; padding:15px; border-radius:15px; background:white; border:1px solid #ddd; font-weight:bold;">Entrar com Google</button>
             <div id="nickname-box" style="display:none; margin-top:20px;">
-                <input id="nickInput" placeholder="Teu apelido..." style="width: 80%; border-radius:10px; border:1px solid #eee; padding:12px;">
-                <button onclick="salvarNick()" style="background: var(--p); color:white; border:none; padding:12px; border-radius:10px; width:100%; margin-top:10px; font-weight:bold;">Entrar</button>
+                <input id="nickInput" placeholder="Teu apelido..." style="width: 80%; padding:12px; border-radius:10px; border:1px solid #eee;">
+                <button onclick="salvarNick()" style="background: var(--p); color:white; border:none; padding:12px; border-radius:10px; width:100%; margin-top:10px;">Entrar</button>
             </div>
         </div>
     </div>
 
     <div id="app-wrapper">
         <header>
-            <div id="contador" style="font-weight:bold; color: var(--p); font-size: 1.1rem;"></div>
-            <div id="status-online">● Aguardando conexão...</div>
+            <div id="contador"></div>
+            <div id="status-online">● Carregando...</div>
         </header>
 
         <div id="tab-chat" class="tab-content active-tab">
@@ -71,7 +123,7 @@
             
             <div id="reply-bar">
                 <span id="reply-text"></span>
-                <button onclick="cancelarResposta()" style="border:none; background:none; font-weight:bold; color:red;">✕</button>
+                <button onclick="cancelarResposta()" style="border:none; background:none; color:red;">✕</button>
             </div>
 
             <div class="input-container">
@@ -90,6 +142,7 @@
     </div>
 
 <script>
+    // Configurações e Scripts permanecem os mesmos, mas com a função de scroll ajustada
     const firebaseConfig = {
         apiKey: "AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
         authDomain: "manuu-c23a7.firebaseapp.com",
@@ -126,7 +179,6 @@
     function iniciar() {
         document.getElementById('login-screen').style.display = "none";
         
-        // Sistema de Presença (Online)
         const presencaRef = db.ref('status_v3/' + user.uid);
         presencaRef.onDisconnect().remove();
         presencaRef.set({ nick: myNick, online: true });
@@ -134,16 +186,15 @@
         db.ref('status_v3').on('value', s => {
             let outros = [];
             s.forEach(c => { if(c.key !== user.uid) outros.push(c.val().nick); });
-            document.getElementById('status-online').innerText = outros.length > 0 ? `● ${outros.join(', ')} está Online` : "● Offline";
-            document.getElementById('status-online').style.color = outros.length > 0 ? "#2ecc71" : "#bbb";
+            const aviso = document.getElementById('status-online');
+            aviso.innerText = outros.length > 0 ? `● ${outros.join(', ')} está Online` : "● Offline";
+            aviso.style.color = outros.length > 0 ? "#2ecc71" : "#bbb";
         });
 
-        // Digitando
         db.ref('digitando_v3').on('value', s => {
             const d = s.val();
-            const aviso = document.getElementById('status-online');
             if(d && d.u !== myNick && d.ativo) {
-                aviso.innerText = `✍️ ${d.u} está digitando...`;
+                document.getElementById('status-online').innerText = `✍️ ${d.u} está digitando...`;
             }
         });
 
@@ -165,20 +216,20 @@
                 const m = child.val();
                 const souEu = m.uid === user.uid;
                 let replyHtml = m.reply ? `<small class="reply-preview">↳ ${m.reply}</small>` : "";
-                
                 const div = document.createElement('div');
                 div.className = `msg ${souEu?'sent':'received'}`;
                 div.innerHTML = `${replyHtml}<b>${m.nick}</b><br>${m.txt}`;
                 div.onclick = () => prepararResposta(m.txt, m.nick);
                 chatBox.appendChild(div);
             });
-            chatBox.scrollTop = chatBox.scrollHeight;
+            // Rola para o fim suavemente
+            setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
         });
     }
 
     function prepararResposta(texto, autor) {
         replyData = `${autor}: ${texto}`;
-        document.getElementById('reply-text').innerText = `Respondendo a: ${texto.substring(0,20)}...`;
+        document.getElementById('reply-text').innerText = `Respondendo: ${texto.substring(0,15)}...`;
         document.getElementById('reply-bar').style.display = "flex";
         chatInput.focus();
     }
@@ -208,7 +259,13 @@
         b.classList.add('active');
         if(t === 'chat') chatBox.scrollTop = chatBox.scrollHeight;
     }
+
+    // Garante que o chat role para o fim quando o teclado abrir
+    window.addEventListener('resize', () => {
+        if(document.activeElement.tagName === 'INPUT') {
+            setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 100);
+        }
+    });
 </script>
 </body>
-    </html>
-    
+</html>

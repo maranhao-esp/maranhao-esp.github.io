@@ -25,7 +25,7 @@ messaging.onBackgroundMessage((payload) => {
     vibrate: [200, 100, 200], 
     tag: 'msg-group',
     renotify: true,
-    requireInteraction: true
+    requireInteraction: true,
     data: { url: '/' }
   };
 

@@ -1,7 +1,7 @@
 // firebase-messaging-sw.js
 importScripts('https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.17.1/firebase-messaging-compat.js');
-
+// nsymar o neymar
 firebase.initializeApp({
   apiKey: "AIzaSyAsK3kEuustv7KyoQXR0Ep-whTpDCDa03w",
   authDomain: "manuu-c23a7.firebaseapp.com",

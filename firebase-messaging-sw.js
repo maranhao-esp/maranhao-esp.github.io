@@ -22,6 +22,10 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification?.body || 'Alguém mandou algo especial!',
     icon: 'https://cdn-icons-png.flaticon.com/512/2589/2589175.png',
     badge: 'https://cdn-icons-png.flaticon.com/512/2589/2589175.png',
+    vibrate: [200, 100, 200], 
+    tag: 'msg-group',
+    renotify: true,
+    requireInteraction: true
     data: { url: '/' }
   };
 

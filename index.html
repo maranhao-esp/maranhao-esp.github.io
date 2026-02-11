@@ -55,6 +55,17 @@
         #reply-bar { display: none; background: #eee; padding: 8px 15px; font-size: 0.8rem; border-radius: 15px 15px 0 0; justify-content: space-between; align-items: center; }
         #login-screen { position: fixed; inset: 0; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; }
     </style>
+    <!-- OneSignal SDK -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "5cae8618-ebf8-4e35-93e4-b5134dd4a8b5",
+    });
+  });
+</script>
+    
 </head>
 <body>
 
